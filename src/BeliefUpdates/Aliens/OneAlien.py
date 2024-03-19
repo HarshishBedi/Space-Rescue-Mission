@@ -46,8 +46,6 @@ def get_observation_matrix_for_one_alien(ship_layout: list[list[str]],
     return observation_matrix_for_one_alien
 
 
-
-
 def update_belief_matrix_for_one_alien(belief_matrix_for_one_alien: list[list[float]],
                                        ship_layout: list[list[str]],
                                        bot_position: tuple[int, int],
@@ -65,7 +63,7 @@ def update_belief_matrix_for_one_alien(belief_matrix_for_one_alien: list[list[fl
                 transition_prob = 1 / num_of_neighbors  # transition probability from neighbor to cell (i,j)
                 updated_belief_matrix_for_one_alien[i][j] += (belief_matrix_for_one_alien[neighbor[0]][neighbor[1]] *
                                                               observation_matrix_for_one_alien[i][j] * transition_prob)
-    # Normalize the updated belief matrix_for_one_crewmate
+    # Normalize the updated belief matrix for one alien
     total_probability = sum(sum(row) for row in updated_belief_matrix_for_one_alien)
     for i in range(ship_dim):
         for j in range(ship_dim):

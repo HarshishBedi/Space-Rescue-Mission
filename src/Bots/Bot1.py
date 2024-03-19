@@ -1,10 +1,8 @@
-from array import array
 from collections import deque
-
 import numpy as np
 from numpy import unravel_index
 from src.BeliefUpdates.Aliens.OneAlien import update_belief_matrix_for_one_alien
-from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crewmate
+from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
 from src.Utilities.Status import Status
 from src.Utilities.utility import get_open_neighbors
 
@@ -19,17 +17,17 @@ class Bot1:
         self.k = k
 
     def update_beliefs(self, ship_layout: list[list[str]], alien_beep: bool, crew_member_beep: bool):
-        self.crew_member_belief = update_belief_matrix_for_one_crewmate(self.crew_member_belief, ship_layout,
+        self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
                                                                         self.position, self.alpha, crew_member_beep)
         self.alien_belief = update_belief_matrix_for_one_alien(self.alien_belief, ship_layout, self.position,
                                                                self.k, alien_beep)
 
-    def get_max_crew_member_belief_position(self):
+    def get_max_belief_crew_member_position(self):
         belief_array = np.array(self.crew_member_belief)
         return unravel_index(belief_array.argmax(), belief_array.shape)
 
     def calculate_path(self, ship_layout):
-        goal_position = self.get_max_crew_member_belief_position()
+        goal_position = self.get_max_belief_crew_member_position()
         fringe = deque([(self.position, deque())])
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Directions: Up, Down, Left, Right
         visited = {self.position}  # Keep track of visited positions to avoid loops
@@ -64,7 +62,8 @@ class Bot1:
                 ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                 self.position = next_position
                 return Status.SUCCESS, ship_layout, self.position
-            if ship_layout[next_position[0]][next_position[1]] == 'A' or ship_layout[next_position[0]][next_position[1]] == 'CM&A':
+            if (ship_layout[next_position[0]][next_position[1]] == 'A'
+                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'B&A'
                 self.position = next_position
