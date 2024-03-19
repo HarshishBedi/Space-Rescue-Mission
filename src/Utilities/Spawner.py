@@ -7,8 +7,6 @@ class Spawner(object):
         self.ship_layout = ship_layout
         self.root_open_square = root_open_square
         self.open_squares = self.get_open_squares()
-        # print('Calculated open squares')
-        # print(self.open_squares)
 
     ''' method get_open_squares is used to fetch the list of open squares,
      which can be later used to spawn different items/characters '''
@@ -43,4 +41,33 @@ class Spawner(object):
         self.open_squares.remove(random_open_square_for_bot)
         return self.ship_layout, random_open_square_for_bot
 
+    # function for spawning aliens
+    def spawn_aliens(self, number_of_aliens, bot_position, k) -> tuple[list[list[int]], list[tuple[int, int]]]:
+        open_squares_available_for_aliens = self.get_open_squares_for_aliens(bot_position, k)
+        random_open_squares_for_aliens = random.sample(open_squares_available_for_aliens, number_of_aliens)
+        for alien in random_open_squares_for_aliens:
+            self.ship_layout[alien[0]][alien[1]] = 'A'
+        return self.ship_layout, random_open_squares_for_aliens
 
+    # function for spawning crew members
+    def spawn_crew_members(self, number_of_crew_members) -> tuple[list[list[int]], tuple[int, int]]:
+        random_open_squares_for_crew_members = random.sample(self.open_squares, number_of_crew_members)
+        for crew in random_open_squares_for_crew_members:
+            x, y = crew
+            if self.ship_layout[x][y] == 'A':
+                self.ship_layout[x][y] = 'CM&A'
+            else:
+                self.ship_layout[x][y] = 'CM'
+        return self.ship_layout, random_open_squares_for_crew_members
+
+    def get_open_squares_for_aliens(self, bot_position, k):
+        open_squares_for_aliens = self.open_squares.copy()
+        left = max(0, bot_position[0] - k)
+        right = min(bot_position[0] + k, len(self.ship_layout) - 1)
+        top = max(bot_position[1] - k, 0)
+        bottom = min(bot_position[1] + k, len(self.ship_layout) - 1)
+        for i in range(left, right + 1):
+            for j in range(top, bottom + 1):
+                if (i, j) in open_squares_for_aliens:
+                    open_squares_for_aliens.remove((i, j))
+        return open_squares_for_aliens
