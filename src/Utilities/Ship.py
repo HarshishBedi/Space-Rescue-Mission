@@ -1,7 +1,4 @@
-import sys
 import random
-from collections import deque
-import time
 
 
 class Ship(object):

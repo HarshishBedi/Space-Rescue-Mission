@@ -2,23 +2,8 @@ import math
 from random import random
 
 
-def get_num_of_open_cells_in_crop(ship_layout:list[list[int]],center_cell:tuple[int,int] = (-1,-1),radius:int = -1):
-    i_range = (-1,-1)
-    j_range = (-1,-1)
-    ship_dim = len(ship_layout)
-    if center_cell == (-1,-1):
-        i_range = (0,ship_dim)
-        j_range = (0,ship_dim)
-    num_of_open_cells = 0
-    for i in range(i_range[0],i_range[1],1):
-        for j in range(j_range[0]):
-            if ship_layout[i][j] == 'O':
-                num_of_open_cells += 1
-    return num_of_open_cells
-
-
 def get_num_of_open_cells_in_ship(ship_layout: list[list[str]]):
-    return sum(ship_layout[i][j] == 'O' for i in range(len(ship_layout)) for j in range(len(ship_layout[i])))
+    return sum(ship_layout[i][j] != 'C' for i in range(len(ship_layout)) for j in range(len(ship_layout[i])))
 
 
 def get_num_of_open_cells_outside_radius_k(ship_layout, bot_position, k):
@@ -35,7 +20,7 @@ def get_num_of_open_cells_outside_radius_k(ship_layout, bot_position, k):
     for i in range(size):
         for j in range(size):
             # Check if the cell is outside the square and is equal to 'O'
-            if (i < top or i > bottom or j < left or j > right) and ship_layout[i][j] == 'O':
+            if (i < top or i > bottom or j < left or j > right) and ship_layout[i][j] != 'C':
                 num_open_cells += 1
 
     return num_open_cells
@@ -44,3 +29,13 @@ def get_num_of_open_cells_outside_radius_k(ship_layout, bot_position, k):
 def get_manhattan_distance(bot_position, cell_position):
     return abs(bot_position[0] - cell_position[0]) + abs(bot_position[1] - cell_position[1])
 
+
+def get_open_neighbors(position: tuple[int, int], ship_layout: list[list[str]]) -> list[tuple[int, int]]:
+    # Define the possible directions (up, down, left, right)
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    neighbors: list[tuple[int, int]] = []
+    for dx, dy in directions:
+        neighbor_x, neighbor_y = position[0] + dx, position[1] + dy
+        if ship_layout[neighbor_x][neighbor_y] != 'C':
+            neighbors.append((neighbor_x, neighbor_y))
+    return neighbors
