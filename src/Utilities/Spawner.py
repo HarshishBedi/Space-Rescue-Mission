@@ -51,7 +51,7 @@ class Spawner(object):
         return self.ship_layout, random_open_squares_for_aliens
 
     # function for spawning crew members
-    def spawn_crew_members(self, number_of_crew_members) -> tuple[list[list[str]], tuple[int, int]]:
+    def spawn_crew_members(self, number_of_crew_members) -> tuple[list[list[str]], list[tuple[int, int]]]:
         random_open_squares_for_crew_members = random.sample(self.open_squares, number_of_crew_members)
         for crew in random_open_squares_for_crew_members:
             x, y = crew

@@ -3,9 +3,14 @@ from tkinter import Tk, ttk
 import matplotlib.pyplot as plt
 
 from src.BeliefUpdates.Aliens.OneAlien import initialize_belief_matrix_for_one_alien
-from src.BeliefUpdates.CrewMembers.OneCrewMember import initialize_belief_matrix_for_one_crewmate
+from src.BeliefUpdates.CrewMembers.OneCrewMember import initialize_belief_matrix_for_one_crew_member
+from src.Bots.Bot1 import Bot1
+from src.Utilities.Alien import alien_step
+from src.Utilities.Alien_Sensor import alien_sensor
+from src.Utilities.Crew_Member_Sensor import Crew_Member_Sensor
 from src.Utilities.Ship import Ship
 from src.Utilities.Spawner import Spawner
+from src.Utilities.Status import Status
 
 
 def show_tkinter(ship_layout: list[list[str]]):
@@ -26,9 +31,10 @@ def show_tkinter(ship_layout: list[list[str]]):
 
 
 def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens: int, number_of_crew_members: int,
-                                                 k: int, sampling_index_per_layout: int = 1,
+                                                 k: int, alpha: float, sampling_index_per_layout: int = 1,
                                                  sampling_index: int = 1, is_show_tkinter: bool = True):
     """
+    :param alpha:
     :param k: radius for the bot's alien sensor
     :param number_of_aliens: number of aliens
     :param number_of_crew_members: number of crew members
@@ -39,16 +45,36 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
     :return:
     """
     ship = Ship(ship_dim)
-    ship_layout, root_open_square = ship.generate_ship_layout()
-    spawner = Spawner(ship_layout, root_open_square)
-    ship_layout, bot_init_coordinates = spawner.spawn_bot()
-    ship_layout, alien_positions = spawner.spawn_aliens(number_of_aliens, bot_init_coordinates,k)
-    ship_layout, crew_member_positions = spawner.spawn_crew_members(number_of_crew_members)
-    show_tkinter(ship_layout)
-    init_belief_matrix_for_one_crewmate = initialize_belief_matrix_for_one_crewmate(ship_layout)
-    show_tkinter(init_belief_matrix_for_one_crewmate)
-    init_belief_matrix_for_one_alien = initialize_belief_matrix_for_one_alien(ship_layout,bot_init_coordinates,k)
-    show_tkinter(init_belief_matrix_for_one_alien)
+    for _ in range(sampling_index):
+        ship_layout, root_open_square = ship.generate_ship_layout()
+        for _ in range(sampling_index_per_layout):
+            spawner = Spawner(ship_layout, root_open_square)
+            ship_layout, bot_init_coordinates = spawner.spawn_bot()
+            ship_layout, alien_positions = spawner.spawn_aliens(number_of_aliens, bot_init_coordinates, k)
+            ship_layout, crew_member_positions = spawner.spawn_crew_members(number_of_crew_members)
+            init_belief_matrix_for_one_crewmate = initialize_belief_matrix_for_one_crew_member(ship_layout)
+            init_belief_matrix_for_one_alien = initialize_belief_matrix_for_one_alien(ship_layout, bot_init_coordinates,
+                                                                                      k)
+            bot1 = Bot1(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate,
+                        alpha, k)
+            crew_member_sensor = Crew_Member_Sensor(crew_member_positions, alpha)
+            status = Status.INPROCESS
+            number_of_steps = 0
+            while status == Status.INPROCESS:
+                if is_show_tkinter:
+                    show_tkinter(ship_layout)
+                alien_sensed = alien_sensor(bot1.position, alien_positions, k, ship_dim=ship_dim)
+                crew_member_beep = crew_member_sensor.crew_members_beep(bot1.position)
+                bot1.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
+                status, ship_layout, _ = bot1.bot_step(ship_layout)
+                if status != Status.INPROCESS:
+                    break
+                status, ship_layout, alien_positions = alien_step(ship_layout, alien_positions)
+                number_of_steps += 1
+            if status == Status.SUCCESS:
+                print(f'Bot succeeded after {number_of_steps} steps')
+            elif status == Status.FAILURE:
+                print(f'Bot failed after {number_of_steps} steps')
 
 
 def plot_metric(y, x, y_label, x_label, title):

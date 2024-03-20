@@ -1,4 +1,4 @@
-def alien_sensor(bot_position: tuple[int], alien_positions: list[tuple[int]], k: int, ship_dim: int) -> bool:
+def alien_sensor(bot_position: tuple[int,int], alien_positions: list[tuple[int,int]], k: int, ship_dim: int) -> bool:
     """
     :param bot_position:
     :param alien_positions:

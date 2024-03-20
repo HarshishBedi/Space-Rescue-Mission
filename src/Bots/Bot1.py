@@ -18,7 +18,7 @@ class Bot1:
 
     def update_beliefs(self, ship_layout: list[list[str]], alien_beep: bool, crew_member_beep: bool):
         self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
-                                                                        self.position, self.alpha, crew_member_beep)
+                                                                           self.position, self.alpha, crew_member_beep)
         self.alien_belief = update_belief_matrix_for_one_alien(self.alien_belief, ship_layout, self.position,
                                                                self.k, alien_beep)
 
@@ -71,4 +71,7 @@ class Bot1:
             ship_layout[self.position[0]][self.position[1]] = 'O'  # Clear the old position
             self.position = next_position
             ship_layout[self.position[0]][self.position[1]] = 'B'  # Mark the new position
+            # Update the beliefs of alien and crew member positions:
+            self.alien_belief[self.position[0]][self.position[1]] = 0
+            self.crew_member_belief[self.position[0]][self.position[1]] = 0
         return Status.INPROCESS, ship_layout, self.position

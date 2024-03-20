@@ -1,5 +1,6 @@
 import random
-from Status import Status
+
+from src.Utilities.Status import Status
 
 
 def alien_step(ship_layout: list[list[str]], aliens: list[tuple[int, int]]) -> tuple[Status, list[list[str]], list[tuple[int, int]]]:
@@ -33,7 +34,7 @@ def alien_step(ship_layout: list[list[str]], aliens: list[tuple[int, int]]) -> t
         for dx, dy in directions:
             nx, ny = alien_x + dx, alien_y + dy
             if 0 <= nx < len(ship_layout) and 0 <= ny < len(ship_layout[0]):
-                if ship_layout[nx][ny] != 'C' and ship_layout[nx][ny] != 'A' and ship_layout[nx][ny] != 'CP&A':
+                if ship_layout[nx][ny] != 'C' and ship_layout[nx][ny] != 'A' and ship_layout[nx][ny] != 'CW&A':
                     possible_steps.append((nx, ny))
         # If no valid neighboring cells found based on the criteria mentioned above, then the alien stays in its current
         # position.
@@ -45,10 +46,10 @@ def alien_step(ship_layout: list[list[str]], aliens: list[tuple[int, int]]) -> t
         # of valid neighboring cells for the aliens.
         aliens[i] = (nx, ny)
         # Updating the current square of alien within the ship layout to remove alien
-        if ship_layout[alien_x][alien_y] == 'CP&A':
+        if ship_layout[alien_x][alien_y] == 'CM&A':
             # If the current position of alien contains both captain and alien('CP&A'), it will be updated to contain
             # only the captain
-            ship_layout[alien_x][alien_y] = 'CP'
+            ship_layout[alien_x][alien_y] = 'CM'
         elif ship_layout[alien_x][alien_y] == 'A':
             # If the current position of the alien contains only the alien ('A'), then it will be updated to an
             #  unoccupied open cell('O')

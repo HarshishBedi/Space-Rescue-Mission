@@ -1,7 +1,3 @@
-import math
-from random import random
-
-
 def get_num_of_open_cells_in_ship(ship_layout: list[list[str]]):
     return sum(ship_layout[i][j] != 'C' for i in range(len(ship_layout)) for j in range(len(ship_layout[i])))
 
@@ -32,10 +28,11 @@ def get_manhattan_distance(bot_position, cell_position):
 
 def get_open_neighbors(position: tuple[int, int], ship_layout: list[list[str]]) -> list[tuple[int, int]]:
     # Define the possible directions (up, down, left, right)
+    ship_dim = len(ship_layout)
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     neighbors: list[tuple[int, int]] = []
     for dx, dy in directions:
         neighbor_x, neighbor_y = position[0] + dx, position[1] + dy
-        if ship_layout[neighbor_x][neighbor_y] != 'C':
+        if 0 <= neighbor_x < ship_dim and 0 <= neighbor_y < ship_dim and ship_layout[neighbor_x][neighbor_y] != 'C':
             neighbors.append((neighbor_x, neighbor_y))
     return neighbors

@@ -2,7 +2,8 @@ from src.Utilities.Simulation import run_simulation_for_n1_crew_members_n2_alien
 
 
 def main():
-    run_simulation_for_n1_crew_members_n2_aliens(5, 1, 1, 1)
+    run_simulation_for_n1_crew_members_n2_aliens(35, 1, 1, 5,1,
+                                                 is_show_tkinter=False)
 
 
 if __name__ == '__main__':
