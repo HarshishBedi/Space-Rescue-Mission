@@ -5,16 +5,19 @@ import matplotlib.pyplot as plt
 from src.BeliefUpdates.Aliens.OneAlien import initialize_belief_matrix_for_one_alien
 from src.BeliefUpdates.CrewMembers.OneCrewMember import initialize_belief_matrix_for_one_crew_member
 from src.Bots.Bot1 import Bot1
+from src.Bots.Bot3 import Bot3
 from src.Utilities.Alien import alien_step
 from src.Utilities.Alien_Sensor import alien_sensor
 from src.Utilities.Crew_Member_Sensor import Crew_Member_Sensor
 from src.Utilities.Ship import Ship
 from src.Utilities.Spawner import Spawner
 from src.Utilities.Status import Status
+from src.Utilities.utility import export_to_pdf
 
 
 def show_tkinter(ship_layout: list[list[str]]):
     """
+    :param belief:
     :param ship_layout: layout of the ship as a 2D matrix with each element representing whether the cell at that
                         coordinates is open/closed/occupied by someone(Eg: Alien/Bot/Captain)
     :return: None
@@ -61,11 +64,15 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
             status = Status.INPROCESS
             number_of_steps = 0
             while status == Status.INPROCESS:
-                if is_show_tkinter:
-                    show_tkinter(ship_layout)
                 alien_sensed = alien_sensor(bot1.position, alien_positions, k, ship_dim=ship_dim)
                 crew_member_beep = crew_member_sensor.crew_members_beep(bot1.position)
-                bot1.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
+                print(f'Crew member beep received:{crew_member_beep}')
+                print(f'Alien sensed:{alien_sensed}')
+                export_to_pdf(ship_layout)
+                if is_show_tkinter:
+                    show_tkinter(ship_layout)
+                    show_tkinter(bot1.crew_member_belief)
+                cb, ab = bot1.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
                 status, ship_layout, _ = bot1.bot_step(ship_layout)
                 if status != Status.INPROCESS:
                     break

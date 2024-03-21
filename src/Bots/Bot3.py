@@ -7,29 +7,46 @@ from src.Utilities.Status import Status
 from src.Utilities.utility import get_open_neighbors
 
 
-class Bot1:
+class Bot3:
     def __init__(self, bot_init_coords: tuple[int, int], alien_belief: list[list[float]],
-                 crew_member_belief: list[list[float]], alpha: float, k: int):
+                 crew_member_belief: list[list[float]], alpha: float, k: int, number_of_crew_members: int = 2):
+        """
+        :param bot_init_coords:
+        :param alien_belief:
+        :param crew_member_belief:
+        :param alpha:
+        :param k:
+        """
         self.position = bot_init_coords
         self.alien_belief = alien_belief
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
+        self.num_of_crew_members_saved = 0
+        self.number_of_crew_members = number_of_crew_members
 
     def update_beliefs(self, ship_layout: list[list[str]], alien_beep: bool, crew_member_beep: bool):
+        """
+        :param ship_layout:
+        :param alien_beep:
+        :param crew_member_beep:
+        :return:
+        """
         self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
                                                                            self.position, self.alpha, crew_member_beep)
         self.alien_belief = update_belief_matrix_for_one_alien(self.alien_belief, ship_layout, self.position,
                                                                self.k, alien_beep)
-        return self.crew_member_belief, self.alien_belief
 
     def get_max_belief_crew_member_position(self):
         belief_array = np.array(self.crew_member_belief)
         return unravel_index(belief_array.argmax(), belief_array.shape)
 
     def calculate_path(self, ship_layout):
+        """
+        :param ship_layout:
+        :return:
+        """
         goal_position = self.get_max_belief_crew_member_position()
-        print(f'Crew Member max belief position:{goal_position}')
         fringe = deque([(self.position, deque())])
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Directions: Up, Down, Left, Right
         visited = {self.position}  # Keep track of visited positions to avoid loops
@@ -56,15 +73,22 @@ class Bot1:
         return None
 
     def bot_step(self, ship_layout):
+        """
+        :param ship_layout:
+        :return:
+        """
         path = self.calculate_path(ship_layout)
         if path:
             print(f'Path:{path}')
             next_position = path.popleft()
+            print(f'next position:{next_position}')
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
-                ship_layout[self.position[0]][self.position[1]] = 'O'
-                ship_layout[next_position[0]][next_position[1]] = 'CM&B'
-                self.position = next_position
-                return Status.SUCCESS, ship_layout, self.position
+                self.num_of_crew_members_saved += 1
+                if self.num_of_crew_members_saved == self.number_of_crew_members:
+                    ship_layout[self.position[0]][self.position[1]] = 'O'
+                    ship_layout[next_position[0]][next_position[1]] = 'CM&B'
+                    self.position = next_position
+                    return Status.SUCCESS, ship_layout, self.position
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'

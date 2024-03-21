@@ -22,7 +22,7 @@ def alien_step(ship_layout: list[list[str]], aliens: list[tuple[int, int]]) -> t
     # if the neighboring cell contains the captain(CP), the updated cell will contain both captain and the alien (CP&A)
     # after the step. If the neighboring cells is an unoccupied open cell, then the cell will be updated to contain the
     # alien(A) after the step
-    rules_for_updating_new_alien_square = {'CP': 'CP&A', 'O': 'A'}
+    rules_for_updating_new_alien_square = {'CM': 'CM&A', 'O': 'A'}
     # looping through the randomized set of aliens
     for i in range(len(aliens)):
         # alien coordinates
