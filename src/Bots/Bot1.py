@@ -15,6 +15,7 @@ class Bot1:
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
+        self.goal = (-1,-1)
 
     def update_beliefs(self, ship_layout: list[list[str]], alien_beep: bool, crew_member_beep: bool):
         self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
@@ -29,6 +30,7 @@ class Bot1:
 
     def calculate_path(self, ship_layout):
         goal_position = self.get_max_belief_crew_member_position()
+        self.goal=goal_position
         print(f'Crew Member max belief position:{goal_position}')
         fringe = deque([(self.position, deque())])
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Directions: Up, Down, Left, Right
@@ -75,6 +77,6 @@ class Bot1:
             self.position = next_position
             ship_layout[self.position[0]][self.position[1]] = 'B'  # Mark the new position
             # Update the beliefs of alien and crew member positions:
-            self.alien_belief[self.position[0]][self.position[1]] = 0
-            self.crew_member_belief[self.position[0]][self.position[1]] = 0
+            self.alien_belief[self.position[0]][self.position[1]] = 0.0
+            self.crew_member_belief[self.position[0]][self.position[1]] = 0.0
         return Status.INPROCESS, ship_layout, self.position

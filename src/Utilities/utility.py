@@ -1,7 +1,4 @@
-import itertools
-
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
+from fpdf import FPDF
 
 
 def get_num_of_open_cells_in_ship(ship_layout: list[list[str]]):
@@ -43,30 +40,14 @@ def get_open_neighbors(position: tuple[int, int], ship_layout: list[list[str]]) 
             neighbors.append((neighbor_x, neighbor_y))
     return neighbors
 
-def grouper(iterable, n):
-    args = [iter(iterable)] * n
-    return itertools.zip_longest(*args)
 
-def export_to_pdf(data):
-    print('Writing to PDF')
-    c = canvas.Canvas("grid-students.pdf", pagesize=A4)
-    w, h = A4
-    max_rows_per_page = 45
-    # Margin.
-    x_offset = 50
-    y_offset = 50
-    # Space between rows.
-    padding = 15
-
-    xlist = [x + x_offset for x in [0, 200, 250, 300, 350, 400]]
-    ylist = [h - y_offset - i * padding for i in range(max_rows_per_page + 1)]
-
-    for rows in grouper(data, max_rows_per_page):
-        rows = tuple(filter(bool, rows))
-        c.grid(xlist, ylist[:len(rows) + 1])
-        for y, row in zip(ylist[:-1], rows):
-            for x, cell in zip(xlist, row):
-                c.drawString(x + 2, y - padding + 3, str(cell))
-        c.showPage()
-
-    c.save()
+def append_to_pdf(data):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Times", size=16)
+    with pdf.table() as table:
+        for data_row in data:
+            row = table.row()
+            for datum in data_row:
+                row.cell(datum)
+    pdf.output('table.pdf')

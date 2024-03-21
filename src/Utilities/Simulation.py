@@ -8,11 +8,12 @@ from src.Bots.Bot1 import Bot1
 from src.Bots.Bot3 import Bot3
 from src.Utilities.Alien import alien_step
 from src.Utilities.Alien_Sensor import alien_sensor
+from src.Utilities.CreateTableClass import PDF
 from src.Utilities.Crew_Member_Sensor import Crew_Member_Sensor
 from src.Utilities.Ship import Ship
 from src.Utilities.Spawner import Spawner
 from src.Utilities.Status import Status
-from src.Utilities.utility import export_to_pdf
+from src.Utilities.utility import append_to_pdf, get_num_of_open_cells_in_ship
 
 
 def show_tkinter(ship_layout: list[list[str]]):
@@ -58,26 +59,62 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
             init_belief_matrix_for_one_crewmate = initialize_belief_matrix_for_one_crew_member(ship_layout)
             init_belief_matrix_for_one_alien = initialize_belief_matrix_for_one_alien(ship_layout, bot_init_coordinates,
                                                                                       k)
-            bot1 = Bot1(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate,
-                        alpha, k)
+            bot = Bot1(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate,
+                       alpha, k)
             crew_member_sensor = Crew_Member_Sensor(crew_member_positions, alpha)
             status = Status.INPROCESS
             number_of_steps = 0
+            pdf = PDF()
+            pdf.add_page()
+            pdf.set_font("Times", size=10)
+
+            pdf.multi_cell(100, pdf.font_size * 2.5,
+                           'Number of open cells:' + str(get_num_of_open_cells_in_ship(ship_layout)),
+                           border=0, align='j', ln=3,
+                           max_line_height=pdf.font_size)
+            pdf.ln(pdf.font_size * 2.5)
+            pdf.create_table(table_data=ship_layout, title='Init Ship Layout' + str(number_of_steps),
+                             cell_width='even')
+            pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
+                             title='Init Crew Member Belief ' +
+                                   str(number_of_steps),
+                             cell_width='even')
+            pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
+                             title='Init Alien belief ' + str(number_of_steps),
+                             cell_width='even')
             while status == Status.INPROCESS:
-                alien_sensed = alien_sensor(bot1.position, alien_positions, k, ship_dim=ship_dim)
-                crew_member_beep = crew_member_sensor.crew_members_beep(bot1.position)
+                alien_sensed = alien_sensor(bot.position, alien_positions, k, ship_dim=ship_dim)
+                crew_member_beep = crew_member_sensor.crew_members_beep(bot.position)
                 print(f'Crew member beep received:{crew_member_beep}')
                 print(f'Alien sensed:{alien_sensed}')
-                export_to_pdf(ship_layout)
-                if is_show_tkinter:
-                    show_tkinter(ship_layout)
-                    show_tkinter(bot1.crew_member_belief)
-                cb, ab = bot1.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
-                status, ship_layout, _ = bot1.bot_step(ship_layout)
+                cb, ab = bot.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
+                pdf.add_page()
+                pdf.set_font("Times", size=10)
+                pdf.multi_cell(100, pdf.font_size * 2.5, 'Crew Member beep:'+str(crew_member_beep),
+                               border=0, align='j', ln=3, max_line_height=pdf.font_size)
+                pdf.ln(pdf.font_size * 2.5)
+                pdf.multi_cell(100, pdf.font_size * 2.5, 'Alien Sensed:'+str(alien_sensed), border=0, align='j',
+                               ln=3, max_line_height=pdf.font_size)
+                pdf.ln(pdf.font_size * 2.5)
+                status, ship_layout, _ = bot.bot_step(ship_layout)
                 if status != Status.INPROCESS:
                     break
                 status, ship_layout, alien_positions = alien_step(ship_layout, alien_positions)
+                pdf.multi_cell(100, pdf.font_size * 2.5, 'Goal Postion:' + str(bot.goal[0])+','+str(bot.goal[1]),
+                               border=0, align='j', ln=3,
+                               max_line_height=pdf.font_size)
+                pdf.ln(pdf.font_size * 2.5)
+                pdf.create_table(table_data=ship_layout, title='Ship Layout at time ' + str(number_of_steps),
+                                 cell_width='even')
+                pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
+                                 title='Crew Member Belief  at time ' +
+                                       str(number_of_steps),
+                                 cell_width='even')
+                pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
+                                 title='Alien belief  at time ' + str(number_of_steps),
+                                 cell_width='even')
                 number_of_steps += 1
+            pdf.output('table_class.pdf')
             if status == Status.SUCCESS:
                 print(f'Bot succeeded after {number_of_steps} steps')
             elif status == Status.FAILURE:
@@ -94,3 +131,12 @@ def plot_metric(y, x, y_label, x_label, title):
     graph.set_ylabel(y_label)
     graph.legend()
     plt.show()
+
+
+def convert_list_float_to_str(belief: list[list[float]]):
+    str_belief = []
+    for row in belief:
+        str_belief.append([])
+        for val in row:
+            str_belief[-1].append(str(val))
+    return str_belief

@@ -99,6 +99,6 @@ class Bot3:
             self.position = next_position
             ship_layout[self.position[0]][self.position[1]] = 'B'  # Mark the new position
             # Update the beliefs of alien and crew member positions:
-            self.alien_belief[self.position[0]][self.position[1]] = 0
-            self.crew_member_belief[self.position[0]][self.position[1]] = 0
+            self.alien_belief[self.position[0]][self.position[1]] = 0.0
+            self.crew_member_belief[self.position[0]][self.position[1]] = 0.0
         return Status.INPROCESS, ship_layout, self.position
