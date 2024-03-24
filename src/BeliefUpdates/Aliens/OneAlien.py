@@ -43,6 +43,10 @@ def get_observation_matrix_for_one_alien(ship_layout: list[list[str]],
                 # If the alien is not sensed, set to 1 for open cells outside the square
                 if (i < top or i > bottom or j < left or j > right) and ship_layout[i][j] != 'C':
                     observation_matrix_for_one_alien[i][j] = 1
+    total_probability = sum(sum(row) for row in observation_matrix_for_one_alien)
+    for i in range(ship_dim):
+        for j in range(ship_dim):
+            observation_matrix_for_one_alien[i][j] /= total_probability
     return observation_matrix_for_one_alien
 
 
@@ -56,6 +60,8 @@ def update_belief_matrix_for_one_alien(belief_matrix_for_one_alien: list[list[fl
     updated_belief_matrix_for_one_alien = [[0 for _ in range(ship_dim)] for _ in range(ship_dim)]
     for i in range(ship_dim):
         for j in range(ship_dim):
+            if ship_layout[i][j] == 'C' or ship_layout[i][j] == 'B':
+                continue
             # As transition probability is non-zero only for neighboring cells
             neighbors = get_open_neighbors((i, j), ship_layout)
             for neighbor in neighbors:

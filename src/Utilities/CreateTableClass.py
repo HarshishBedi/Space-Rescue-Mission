@@ -89,7 +89,7 @@ class PDF(FPDF):
 
         else:
             header = table_data[0]
-            data = table_data[1:]
+            data = table_data[0:]
 
         line_height = self.font_size * 2.5
 
@@ -135,6 +135,11 @@ class PDF(FPDF):
         if not isinstance(col_width, list):
             if x_start:
                 self.set_x(x_start)
+            self.multi_cell(col_width, line_height, 'X', border=0, align=align_header, ln=3,
+                            max_line_height=self.font_size)
+            for i in range(len(header)):
+                self.multi_cell(col_width, line_height, str(i), border=0, align=align_header, ln=3,
+                                max_line_height=self.font_size)
             for datum in header:
                 self.multi_cell(col_width, line_height, datum, border=0, align=align_header, ln=3,
                                 max_line_height=self.font_size)
@@ -143,8 +148,10 @@ class PDF(FPDF):
             y2 = self.get_y()
             self.line(x_left, y1, x_right, y1)
             self.line(x_left, y2, x_right, y2)
-
-            for row in data:
+            for i in range(len(data)):
+                row = data[i]
+                self.multi_cell(col_width, line_height, str(i), border=0, align=align_data, ln=3,
+                                max_line_height=self.font_size)
                 if x_start:  # not sure if I need this
                     self.set_x(x_start)
                 for datum in row:

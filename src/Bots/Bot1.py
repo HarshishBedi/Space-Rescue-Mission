@@ -15,7 +15,8 @@ class Bot1:
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
-        self.goal = (-1,-1)
+        self.goal = (-1, -1)
+        self.path = None
 
     def update_beliefs(self, ship_layout: list[list[str]], alien_beep: bool, crew_member_beep: bool):
         self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
@@ -25,12 +26,19 @@ class Bot1:
         return self.crew_member_belief, self.alien_belief
 
     def get_max_belief_crew_member_position(self):
-        belief_array = np.array(self.crew_member_belief)
-        return unravel_index(belief_array.argmax(), belief_array.shape)
+        max_belief_position = [-1, -1]
+        current_max = -1
+        for i in range(len(self.crew_member_belief)):
+            for j in range(len(self.crew_member_belief)):
+                if self.crew_member_belief[i][j] > current_max:
+                    current_max = self.crew_member_belief[i][j]
+                    max_belief_position[0] = i
+                    max_belief_position[1] = j
+        return tuple(max_belief_position)
 
     def calculate_path(self, ship_layout):
         goal_position = self.get_max_belief_crew_member_position()
-        self.goal=goal_position
+        self.goal = goal_position
         print(f'Crew Member max belief position:{goal_position}')
         fringe = deque([(self.position, deque())])
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Directions: Up, Down, Left, Right
@@ -39,10 +47,13 @@ class Bot1:
         for neighbor in neighbors:
             if self.alien_belief[neighbor[0]][neighbor[1]] == 0:
                 fringe.append((neighbor, deque([neighbor])))
+                visited.add(neighbor)
         if len(fringe) > 1:
             fringe.popleft()
         while fringe:
             current_position, path = fringe.popleft()
+            if current_position == goal_position:
+                return path
             for dx, dy in directions:
                 nx, ny = current_position[0] + dx, current_position[1] + dy
                 next_position = (nx, ny)
@@ -59,9 +70,11 @@ class Bot1:
 
     def bot_step(self, ship_layout):
         path = self.calculate_path(ship_layout)
+        self.path = path
+        print(f'Path calculated to goal node:{self.goal} is:{path}')
         if path:
             print(f'Path:{path}')
-            next_position = path.popleft()
+            next_position = path[0]
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'CM&B'
