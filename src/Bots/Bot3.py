@@ -1,9 +1,6 @@
 from collections import deque
-import numpy as np
-from numpy import unravel_index
 from src.BeliefUpdates.Aliens.OneAlien import update_belief_matrix_for_one_alien
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
-from src.BeliefUpdates.CrewMembers.TwoCrewMembers import update_belief_matrix_for_two_crew_members
 from src.Utilities.Status import Status
 from src.Utilities.utility import get_open_neighbors
 

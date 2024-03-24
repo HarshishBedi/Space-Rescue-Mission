@@ -1,7 +1,6 @@
 from collections import deque
-import numpy as np
-from numpy import unravel_index
 from src.BeliefUpdates.Aliens.OneAlien import update_belief_matrix_for_one_alien
+from src.BeliefUpdates.Aliens.TwoAliens import update_belief_matrix_for_two_aliens
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
 from src.BeliefUpdates.CrewMembers.TwoCrewMembers import update_belief_matrix_for_two_crew_members
 from src.Utilities.Status import Status
@@ -9,8 +8,8 @@ from src.Utilities.utility import get_open_neighbors
 
 
 class Bot7:
-    def __init__(self, bot_init_coords: tuple[int, int], alien_belief: list[list[float]],
-                 crew_member_belief: list[list[float]], alpha: float, k: int, number_of_crew_members: int = 2):
+    def __init__(self, bot_init_coords: tuple[int, int], alien_belief,
+                 crew_member_belief, alpha: float, k: int, number_of_crew_members: int = 2):
         """
         :param bot_init_coords:
         :param alien_belief:
@@ -25,6 +24,8 @@ class Bot7:
         self.k = k
         self.num_of_crew_members_saved = 0
         self.number_of_crew_members = number_of_crew_members
+        self.goal = (-1, -1)
+        self.path = None
 
     def update_beliefs(self, ship_layout: list[list[str]], alien_beep: bool, crew_member_beep: bool):
         """
@@ -34,13 +35,23 @@ class Bot7:
         :return:
         """
         self.crew_member_belief = update_belief_matrix_for_two_crew_members(self.crew_member_belief, ship_layout,
-                                                                           self.position, self.alpha, crew_member_beep)
-        self.alien_belief = update_belief_matrix_for_one_alien(self.alien_belief, ship_layout, self.position,
+                                                                            self.position, self.alpha, crew_member_beep)
+        self.alien_belief = update_belief_matrix_for_two_aliens(self.alien_belief, ship_layout, self.position,
                                                                self.k, alien_beep)
+        return self.crew_member_belief, self.alien_belief
 
     def get_max_belief_crew_member_position(self):
-        belief_array = np.array(self.crew_member_belief)
-        return unravel_index(belief_array.argmax(), belief_array.shape)
+        max_position = [-1, -1, -1, -1]
+        max_val = -1
+        dim = len(self.crew_member_belief)
+        for i in range(dim):
+            for j in range(dim):
+                for i1 in range(dim):
+                    for j1 in range(dim):
+                        if self.crew_member_belief[i][j][i1][j1] > max_val:
+                            max_val = self.crew_member_belief[i][j][i1][j1]
+                            max_position = [i,j,i1,j1]
+        return max_position[0], max_position[1]
 
     def calculate_path(self, ship_layout):
         """
@@ -48,6 +59,7 @@ class Bot7:
         :return:
         """
         goal_position = self.get_max_belief_crew_member_position()
+        self.goal = goal_position
         fringe = deque([(self.position, deque())])
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Directions: Up, Down, Left, Right
         visited = {self.position}  # Keep track of visited positions to avoid loops
@@ -55,10 +67,13 @@ class Bot7:
         for neighbor in neighbors:
             if self.alien_belief[neighbor[0]][neighbor[1]] == 0:
                 fringe.append((neighbor, deque([neighbor])))
+                visited.add(neighbor)
         if len(fringe) > 1:
             fringe.popleft()
         while fringe:
             current_position, path = fringe.popleft()
+            if current_position == goal_position:
+                return path
             for dx, dy in directions:
                 nx, ny = current_position[0] + dx, current_position[1] + dy
                 next_position = (nx, ny)
@@ -79,9 +94,10 @@ class Bot7:
         :return:
         """
         path = self.calculate_path(ship_layout)
+        self.path = path
         if path:
             print(f'Path:{path}')
-            next_position = path.popleft()
+            next_position = path[0]
             print(f'next position:{next_position}')
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
                 self.num_of_crew_members_saved += 1

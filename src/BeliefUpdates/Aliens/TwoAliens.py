@@ -70,7 +70,7 @@ def update_belief_matrix_for_two_aliens(belief_matrix_for_two_aliens: list[list[
         for j1 in range(ship_dim):
             for i2 in range(ship_dim):
                 for j2 in range(ship_dim):
-                    if ship_layout[i1][j1] != 'C' and ship_layout[i2][j2] == 'C' and (i1, j1) != (i2, j2):
+                    if ship_layout[i1][j1] != 'C' and ship_layout[i2][j2] != 'C' and (i1, j1) != (i2, j2):
                         # Update belief based on the transition probabilities of neighboring cells
                         for neighbor1 in get_open_neighbors((i1, j1), ship_layout):
                             for neighbor2 in get_open_neighbors((i2, j2), ship_layout):

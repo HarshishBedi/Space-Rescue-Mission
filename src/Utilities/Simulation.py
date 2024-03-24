@@ -8,6 +8,7 @@ from src.BeliefUpdates.CrewMembers.OneCrewMember import initialize_belief_matrix
 from src.BeliefUpdates.CrewMembers.TwoCrewMembers import initialize_belief_matrix_for_two_crew_members
 from src.Bots.Bot1 import Bot1
 from src.Bots.Bot3 import Bot3
+from src.Bots.Bot7 import Bot7
 from src.Utilities.Alien import alien_step
 from src.Utilities.Alien_Sensor import alien_sensor
 from src.Utilities.CreateTableClass import PDF
@@ -39,7 +40,7 @@ def show_tkinter(ship_layout: list[list[str]]):
 def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens: int, number_of_crew_members: int,
                                                  k: int, alpha: float, sampling_index_per_layout: int = 1,
                                                  sampling_index: int = 1, bot_type: str = 'BOT1',
-                                                 is_show_tkinter: bool = True):
+                                                 is_show_tkinter: bool = True,is_gen_pdf:bool = False):
     """
     :param bot_type:
     :param alpha:
@@ -73,21 +74,21 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
             pdf = PDF()
             pdf.add_page()
             pdf.set_font("Times", size=10)
-
-            pdf.multi_cell(100, pdf.font_size * 2.5,
-                           'Number of open cells:' + str(get_num_of_open_cells_in_ship(ship_layout)),
-                           border=0, align='j', ln=3,
-                           max_line_height=pdf.font_size)
-            pdf.ln(pdf.font_size * 2.5)
-            pdf.create_table(table_data=ship_layout, title='Init Ship Layout' + str(number_of_steps),
-                             cell_width='even')
-            pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
-                             title='Init Crew Member Belief ' +
-                                   str(number_of_steps),
-                             cell_width='even')
-            pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
-                             title='Init Alien belief ' + str(number_of_steps),
-                             cell_width='even')
+            if is_gen_pdf:
+                pdf.multi_cell(100, pdf.font_size * 2.5,
+                               'Number of open cells:' + str(get_num_of_open_cells_in_ship(ship_layout)),
+                               border=0, align='j', ln=3,
+                               max_line_height=pdf.font_size)
+                pdf.ln(pdf.font_size * 2.5)
+                pdf.create_table(table_data=ship_layout, title='Init Ship Layout' + str(number_of_steps),
+                                 cell_width='even')
+                pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
+                                 title='Init Crew Member Belief ' +
+                                       str(number_of_steps),
+                                 cell_width='even')
+                pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
+                                 title='Init Alien belief ' + str(number_of_steps),
+                                 cell_width='even')
             print(ship_layout)
             while status == Status.INPROCESS:
                 alien_sensed = alien_sensor(bot.position, alien_positions, k, ship_dim=ship_dim)
@@ -95,35 +96,37 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
                 print(f'Crew member beep received:{crew_member_beep}')
                 print(f'Alien sensed:{alien_sensed}')
                 cb, ab = bot.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
-                pdf.add_page()
-                pdf.set_font("Times", size=10)
-                pdf.multi_cell(100, pdf.font_size * 2.5, 'Crew Member beep:' + str(crew_member_beep),
-                               border=0, align='j', ln=3, max_line_height=pdf.font_size)
-                pdf.ln(pdf.font_size * 2.5)
-                pdf.multi_cell(100, pdf.font_size * 2.5, 'Alien Sensed:' + str(alien_sensed), border=0, align='j',
-                               ln=3, max_line_height=pdf.font_size)
-                pdf.ln(pdf.font_size * 2.5)
+                if is_gen_pdf:
+                    pdf.add_page()
+                    pdf.set_font("Times", size=10)
+                    pdf.multi_cell(100, pdf.font_size * 2.5, 'Crew Member beep:' + str(crew_member_beep),
+                                   border=0, align='j', ln=3, max_line_height=pdf.font_size)
+                    pdf.ln(pdf.font_size * 2.5)
+                    pdf.multi_cell(100, pdf.font_size * 2.5, 'Alien Sensed:' + str(alien_sensed), border=0, align='j',
+                                   ln=3, max_line_height=pdf.font_size)
+                    pdf.ln(pdf.font_size * 2.5)
                 status, ship_layout, _ = bot.bot_step(ship_layout)
                 if status != Status.INPROCESS:
                     break
                 status, ship_layout, alien_positions = alien_step(ship_layout, alien_positions)
-                pdf.multi_cell(100, pdf.font_size * 2.5, 'Goal Postion:' + str(bot.goal[0]) + ',' + str(bot.goal[1]),
-                               border=0, align='j', ln=3,
-                               max_line_height=pdf.font_size)
-                pdf.ln(pdf.font_size * 2.5)
-                pdf.multi_cell(100, pdf.font_size * 2.5, 'Path to goal:' + str(bot.path),
-                               border=0, align='j', ln=3,
-                               max_line_height=pdf.font_size)
-                pdf.ln(pdf.font_size * 2.5)
-                pdf.create_table(table_data=ship_layout, title='Ship Layout at time ' + str(number_of_steps),
-                                 cell_width='even')
-                pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
-                                 title='Crew Member Belief  at time ' +
-                                       str(number_of_steps),
-                                 cell_width='even')
-                pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
-                                 title='Alien belief  at time ' + str(number_of_steps),
-                                 cell_width='even')
+                if is_gen_pdf:
+                    pdf.multi_cell(100, pdf.font_size * 2.5, 'Goal Postion:' + str(bot.goal[0]) + ',' + str(bot.goal[1]),
+                                   border=0, align='j', ln=3,
+                                   max_line_height=pdf.font_size)
+                    pdf.ln(pdf.font_size * 2.5)
+                    pdf.multi_cell(100, pdf.font_size * 2.5, 'Path to goal:' + str(bot.path),
+                                   border=0, align='j', ln=3,
+                                   max_line_height=pdf.font_size)
+                    pdf.ln(pdf.font_size * 2.5)
+                    pdf.create_table(table_data=ship_layout, title='Ship Layout at time ' + str(number_of_steps),
+                                     cell_width='even')
+                    pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
+                                     title='Crew Member Belief  at time ' +
+                                           str(number_of_steps),
+                                     cell_width='even')
+                    pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
+                                     title='Alien belief  at time ' + str(number_of_steps),
+                                     cell_width='even')
                 number_of_steps += 1
             pdf.output('table_class.pdf')
             if status == Status.SUCCESS:
@@ -163,6 +166,9 @@ def get_bot_object(bot_init_coordinates: tuple[int, int], init_belief_matrix_for
         return None
     elif bot_type == 'BOT3':
         return Bot3(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
+                    k, number_of_crew_members)
+    elif bot_type == 'BOT7':
+        return Bot7(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
                     k, number_of_crew_members)
 
 
