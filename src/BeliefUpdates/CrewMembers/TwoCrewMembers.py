@@ -53,7 +53,6 @@ def update_belief_matrix_for_two_crew_members(belief_matrix: list[list[list[list
 
     updated_belief_matrix = [[[[
         0 for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)]
-
     for i1 in range(ship_dim):
         for j1 in range(ship_dim):
             for i2 in range(ship_dim):

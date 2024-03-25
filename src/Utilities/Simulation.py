@@ -1,4 +1,5 @@
 import logging
+import time
 from tkinter import Tk, ttk
 import matplotlib.pyplot as plt
 
@@ -8,6 +9,7 @@ from src.BeliefUpdates.CrewMembers.OneCrewMember import initialize_belief_matrix
 from src.BeliefUpdates.CrewMembers.TwoCrewMembers import initialize_belief_matrix_for_two_crew_members
 from src.Bots.Bot1 import Bot1
 from src.Bots.Bot3 import Bot3
+from src.Bots.Bot4 import Bot4
 from src.Bots.Bot7 import Bot7
 from src.Utilities.Alien import alien_step
 from src.Utilities.Alien_Sensor import alien_sensor
@@ -91,6 +93,7 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
                                  cell_width='even')
             print(ship_layout)
             while status == Status.INPROCESS:
+                start_time = time.time()
                 alien_sensed = alien_sensor(bot.position, alien_positions, k, ship_dim=ship_dim)
                 crew_member_beep = crew_member_sensor.crew_members_beep(bot.position)
                 print(f'Crew member beep received:{crew_member_beep}')
@@ -128,6 +131,7 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
                                      title='Alien belief  at time ' + str(number_of_steps),
                                      cell_width='even')
                 number_of_steps += 1
+                print(f'Timestep {number_of_steps} completed in {time.time()-start_time} seconds')
             pdf.output('table_class.pdf')
             if status == Status.SUCCESS:
                 print(f'Bot succeeded after {number_of_steps} steps')
@@ -169,6 +173,9 @@ def get_bot_object(bot_init_coordinates: tuple[int, int], init_belief_matrix_for
                     k, number_of_crew_members)
     elif bot_type == 'BOT7':
         return Bot7(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
+                    k, number_of_crew_members)
+    elif bot_type == 'BOT4':
+        return Bot4(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
                     k, number_of_crew_members)
 
 

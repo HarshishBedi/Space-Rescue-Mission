@@ -7,7 +7,7 @@ from src.Utilities.Status import Status
 from src.Utilities.utility import get_open_neighbors
 
 
-class Bot7:
+class Bot4:
     def __init__(self, bot_init_coords: tuple[int, int], alien_belief,
                  crew_member_belief, alpha: float, k: int, number_of_crew_members: int = 2):
         """
@@ -36,7 +36,7 @@ class Bot7:
         """
         self.crew_member_belief = update_belief_matrix_for_two_crew_members(self.crew_member_belief, ship_layout,
                                                                             self.position, self.alpha, crew_member_beep)
-        self.alien_belief = update_belief_matrix_for_two_aliens(self.alien_belief, ship_layout, self.position,
+        self.alien_belief = update_belief_matrix_for_one_alien(self.alien_belief, ship_layout, self.position,
                                                                 self.k, alien_beep)
         return self.crew_member_belief, self.alien_belief
 
@@ -65,7 +65,7 @@ class Bot7:
         visited = {self.position}  # Keep track of visited positions to avoid loops
         neighbors = get_open_neighbors(self.position, ship_layout)
         for neighbor in neighbors:
-            if self.is_cell_alien_safe(neighbor,ship_layout):
+            if self.alien_belief[neighbor[0]][neighbor[1]] == 0:
                 fringe.append((neighbor, deque([neighbor])))
                 visited.add(neighbor)
         if len(fringe) > 1:
@@ -121,18 +121,9 @@ class Bot7:
 
     def update_belief_based_on_bot_step(self, ship_layout):
         ship_dim = len(ship_layout)
+        self.alien_belief[self.position[0]][self.position[1]] = 0.0
         for i in range(ship_dim):
             for j in range(ship_dim):
                 self.crew_member_belief[i][j][self.position[0]][self.position[1]] = 0.0
-                self.alien_belief[i][j][self.position[0]][self.position[1]] = 0.0
                 self.crew_member_belief[self.position[0]][self.position[1]][i][j] = 0.0
-                self.alien_belief[self.position[0]][self.position[1]][i][j] = 0.0
 
-    def is_cell_alien_safe(self, cell: tuple[int, int], ship_layout: list[list[str]]) -> bool:
-        x, y = cell
-        alien_chance_in_cell = 0.0
-        ship_dim = len(ship_layout)
-        for i in range(ship_dim):
-            for j in range(ship_dim):
-                alien_chance_in_cell += (self.alien_belief[i][j][x][y] + self.alien_belief[x][y][i][j])
-        return alien_chance_in_cell == 0.0
