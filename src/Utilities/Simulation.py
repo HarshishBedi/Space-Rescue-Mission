@@ -18,7 +18,7 @@ from src.Utilities.Crew_Member_Sensor import Crew_Member_Sensor
 from src.Utilities.Ship import Ship
 from src.Utilities.Spawner import Spawner
 from src.Utilities.Status import Status
-from src.Utilities.utility import append_to_pdf, get_num_of_open_cells_in_ship
+from src.Utilities.utility import append_to_pdf, get_num_of_open_cells_in_ship, open_neighbor_cells_matrix
 
 
 def show_tkinter(ship_layout: list[list[str]]):
@@ -58,18 +58,19 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
     ship = Ship(ship_dim)
     for _ in range(sampling_index):
         ship_layout, root_open_square = ship.generate_ship_layout()
+        open_neighbor_cells = open_neighbor_cells_matrix(ship_layout)
         print(f'Ship layout generated:{len(ship_layout)} and {len(ship_layout[0])}')
         for _ in range(sampling_index_per_layout):
             spawner = Spawner(ship_layout, root_open_square)
             ship_layout, bot_init_coordinates = spawner.spawn_bot()
             ship_layout, alien_positions = spawner.spawn_aliens(number_of_aliens, bot_init_coordinates, k)
             ship_layout, crew_member_positions = spawner.spawn_crew_members(number_of_crew_members)
-            init_belief_matrix_for_one_crewmate = initialize_belief_matrix_for_one_crew_member(ship_layout)
             (init_belief_matrix_for_one_crewmate,
              init_belief_matrix_for_one_alien) = init_belief(bot_type=bot_type, ship_layout=ship_layout,
                                                              bot_init_coordinates=bot_init_coordinates, k=k)
             bot = get_bot_object(bot_init_coordinates, init_belief_matrix_for_one_alien,
-                                 init_belief_matrix_for_one_crewmate, alpha, k, number_of_crew_members, bot_type)
+                                 init_belief_matrix_for_one_crewmate, alpha, k, number_of_crew_members, bot_type,
+                                 open_neighbor_cells)
             crew_member_sensor = Crew_Member_Sensor(crew_member_positions, alpha)
             status = Status.INPROCESS
             number_of_steps = 0
@@ -162,7 +163,7 @@ def convert_list_float_to_str(belief: list[list[float]]):
 
 def get_bot_object(bot_init_coordinates: tuple[int, int], init_belief_matrix_for_one_alien,
                    init_belief_matrix_for_one_crewmate,
-                   alpha: float, k: int, number_of_crew_members: int, bot_type: str):
+                   alpha: float, k: int, number_of_crew_members: int, bot_type: str, open_neighbor_cells):
     if bot_type == 'BOT1':
         return Bot1(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate,
                     alpha, k)
@@ -173,7 +174,7 @@ def get_bot_object(bot_init_coordinates: tuple[int, int], init_belief_matrix_for
                     k, number_of_crew_members)
     elif bot_type == 'BOT7':
         return Bot7(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
-                    k, number_of_crew_members)
+                    k, number_of_crew_members,open_neighbor_cells=open_neighbor_cells)
     elif bot_type == 'BOT4':
         return Bot4(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
                     k, number_of_crew_members)

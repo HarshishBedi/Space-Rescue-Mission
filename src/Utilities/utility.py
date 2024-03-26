@@ -40,6 +40,15 @@ def get_open_neighbors(position: tuple[int, int], ship_layout: list[list[str]]) 
             neighbors.append((neighbor_x, neighbor_y))
     return neighbors
 
+def open_neighbor_cells_matrix(ship_layout):
+    ship_dim = len(ship_layout)
+    open_neighbor_cells = [[[] for i in range(ship_dim)] for j in range(ship_dim)]
+    for i in range(ship_dim):
+        for j in range(ship_dim):
+            neighbors = get_open_neighbors((i,j),ship_layout)
+            open_neighbor_cells[i][j] = neighbors
+    return open_neighbor_cells
+
 
 def append_to_pdf(data):
     pdf = FPDF()

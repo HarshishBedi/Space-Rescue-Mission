@@ -22,7 +22,7 @@ def alien_step(ship_layout: list[list[str]], aliens: list[tuple[int, int]]) -> t
     # if the neighboring cell contains the captain(CP), the updated cell will contain both captain and the alien (CP&A)
     # after the step. If the neighboring cells is an unoccupied open cell, then the cell will be updated to contain the
     # alien(A) after the step
-    rules_for_updating_new_alien_square = {'CM': 'CM&A', 'O': 'A','CM&A':'CM&A&A'}
+    rules_for_updating_new_alien_square = {'CM': 'CM&A', 'O': 'A','CM&A':'CM&A&A','A':'A&A'}
     # looping through the randomized set of aliens
     for i in range(len(aliens)):
         # alien coordinates
@@ -34,7 +34,7 @@ def alien_step(ship_layout: list[list[str]], aliens: list[tuple[int, int]]) -> t
         for dx, dy in directions:
             nx, ny = alien_x + dx, alien_y + dy
             if 0 <= nx < len(ship_layout) and 0 <= ny < len(ship_layout[0]):
-                if ship_layout[nx][ny] != 'C' and ship_layout[nx][ny] != 'A' and ship_layout[nx][ny] != 'CW&A':
+                if ship_layout[nx][ny] != 'C' and ship_layout[nx][ny] != 'CW&A':
                     possible_steps.append((nx, ny))
         # If no valid neighboring cells found based on the criteria mentioned above, then the alien stays in its current
         # position.
@@ -54,6 +54,8 @@ def alien_step(ship_layout: list[list[str]], aliens: list[tuple[int, int]]) -> t
             # If the current position of the alien contains only the alien ('A'), then it will be updated to an
             #  unoccupied open cell('O')
             ship_layout[alien_x][alien_y] = 'O'
+        elif ship_layout[alien_x][alien_y] == 'A&A':
+            ship_layout[alien_x][alien_y] = 'A'
         # Updating the randomly selected next square of alien within the ship layout to place the alien
         if ship_layout[nx][ny] == 'B':
             # If the next cell of the alien contains the bot, then the task fails. So we return the status of
