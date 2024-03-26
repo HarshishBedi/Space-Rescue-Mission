@@ -22,27 +22,19 @@ def initialize_belief_matrix_for_two_crew_members(ship_layout: list[list[str]]) 
     return belief_matrix_for_two_crew_members
 
 
-def get_observation_matrix_for_two_crew_members(ship_layout: list[list[str]], bot_position: tuple[int, int],
-                                                alpha: float, is_beep: bool) -> np.ndarray:
+def get_observation_matrix_for_two_crew_members(ship_layout, bot_position, alpha, is_beep):
     start_time = time.time()
     ship_dim = len(ship_layout)
-
-    # Create a grid of indices
-    i, j = np.indices((ship_dim, ship_dim))
-
-    # Calculate the Manhattan distances from the bot's position
-    d1 = np.abs(i - bot_position[0]) + np.abs(j - bot_position[1])
-    d2 = d1[..., np.newaxis, np.newaxis]
-
-    # Calculate the beep probabilities
+    i1, j1, i2, j2 = np.ogrid[:ship_dim, :ship_dim, :ship_dim, :ship_dim]
+    d1 = np.abs(i1 - bot_position[0]) + np.abs(j1 - bot_position[1])
+    d2 = np.abs(i2 - bot_position[0]) + np.abs(j2 - bot_position[1])
     beep_prob_1 = np.exp(-alpha * (d1 - 1))
     beep_prob_2 = np.exp(-alpha * (d2 - 1))
 
-    # Calculate the observation matrix
     if is_beep:
-        observation_matrix = beep_prob_1[..., np.newaxis, np.newaxis] + beep_prob_2 - beep_prob_1[..., np.newaxis, np.newaxis] * beep_prob_2
+        observation_matrix = beep_prob_1 + beep_prob_2 - beep_prob_1 * beep_prob_2
     else:
-        observation_matrix = (1 - beep_prob_1[..., np.newaxis, np.newaxis]) * (1 - beep_prob_2)
+        observation_matrix = (1 - beep_prob_1) * (1 - beep_prob_2)
 
     print(f'Time taken for generating observation matrix: {time.time() - start_time}')
     return observation_matrix
