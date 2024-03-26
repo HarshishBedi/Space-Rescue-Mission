@@ -41,8 +41,8 @@ def show_tkinter(ship_layout: list[list[str]]):
 
 def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens: int, number_of_crew_members: int,
                                                  k: int, alpha: float, sampling_index_per_layout: int = 1,
-                                                 sampling_index: int = 1, bot_type: str = 'BOT1',
-                                                 is_show_tkinter: bool = True,is_gen_pdf:bool = False):
+                                                 sampling_index: int = 1, bot_types: list[str] = [],
+                                                 is_show_tkinter: bool = True, is_gen_pdf: bool = False):
     """
     :param bot_type:
     :param alpha:
@@ -56,6 +56,9 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
     :return:
     """
     ship = Ship(ship_dim)
+    avg_num_steps_save_crew = 0
+    num_of_success = 0
+    avg_num_crew_saved = 0
     for _ in range(sampling_index):
         ship_layout, root_open_square = ship.generate_ship_layout()
         open_neighbor_cells = open_neighbor_cells_matrix(ship_layout)
@@ -65,79 +68,99 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
             ship_layout, bot_init_coordinates = spawner.spawn_bot()
             ship_layout, alien_positions = spawner.spawn_aliens(number_of_aliens, bot_init_coordinates, k)
             ship_layout, crew_member_positions = spawner.spawn_crew_members(number_of_crew_members)
-            (init_belief_matrix_for_one_crewmate,
-             init_belief_matrix_for_one_alien) = init_belief(bot_type=bot_type, ship_layout=ship_layout,
-                                                             bot_init_coordinates=bot_init_coordinates, k=k)
-            bot = get_bot_object(bot_init_coordinates, init_belief_matrix_for_one_alien,
-                                 init_belief_matrix_for_one_crewmate, alpha, k, number_of_crew_members, bot_type,
-                                 open_neighbor_cells)
-            crew_member_sensor = Crew_Member_Sensor(crew_member_positions, alpha)
-            status = Status.INPROCESS
-            number_of_steps = 0
-            pdf = PDF()
-            pdf.add_page()
-            pdf.set_font("Times", size=10)
-            if is_gen_pdf:
-                pdf.multi_cell(100, pdf.font_size * 2.5,
-                               'Number of open cells:' + str(get_num_of_open_cells_in_ship(ship_layout)),
-                               border=0, align='j', ln=3,
-                               max_line_height=pdf.font_size)
-                pdf.ln(pdf.font_size * 2.5)
-                pdf.create_table(table_data=ship_layout, title='Init Ship Layout' + str(number_of_steps),
-                                 cell_width='even')
-                pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
-                                 title='Init Crew Member Belief ' +
-                                       str(number_of_steps),
-                                 cell_width='even')
-                pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
-                                 title='Init Alien belief ' + str(number_of_steps),
-                                 cell_width='even')
-            print(ship_layout)
-            while status == Status.INPROCESS:
-                start_time = time.time()
-                alien_sensed = alien_sensor(bot.position, alien_positions, k, ship_dim=ship_dim)
-                crew_member_beep = crew_member_sensor.crew_members_beep(bot.position)
-                print(f'Crew member beep received:{crew_member_beep}')
-                print(f'Alien sensed:{alien_sensed}')
-                cb, ab = bot.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
+            num_crew_saved = 0
+            for bot_type in bot_types:
+                (init_belief_matrix_for_one_crewmate,
+                 init_belief_matrix_for_one_alien) = init_belief(bot_type=bot_type, ship_layout=ship_layout,
+                                                                 bot_init_coordinates=bot_init_coordinates, k=k)
+                bot = get_bot_object(bot_init_coordinates, init_belief_matrix_for_one_alien,
+                                     init_belief_matrix_for_one_crewmate, alpha, k, number_of_crew_members, bot_type,
+                                     open_neighbor_cells)
+                crew_member_sensor = Crew_Member_Sensor(crew_member_positions, alpha)
+                status = Status.INPROCESS
+                number_of_steps = 0
+                pdf = PDF()
+                pdf.add_page()
+                pdf.set_font("Times", size=10)
                 if is_gen_pdf:
-                    pdf.add_page()
-                    pdf.set_font("Times", size=10)
-                    pdf.multi_cell(100, pdf.font_size * 2.5, 'Crew Member beep:' + str(crew_member_beep),
-                                   border=0, align='j', ln=3, max_line_height=pdf.font_size)
-                    pdf.ln(pdf.font_size * 2.5)
-                    pdf.multi_cell(100, pdf.font_size * 2.5, 'Alien Sensed:' + str(alien_sensed), border=0, align='j',
-                                   ln=3, max_line_height=pdf.font_size)
-                    pdf.ln(pdf.font_size * 2.5)
-                status, ship_layout, _ = bot.bot_step(ship_layout)
-                if status != Status.INPROCESS:
-                    break
-                status, ship_layout, alien_positions = alien_step(ship_layout, alien_positions)
-                if is_gen_pdf:
-                    pdf.multi_cell(100, pdf.font_size * 2.5, 'Goal Postion:' + str(bot.goal[0]) + ',' + str(bot.goal[1]),
+                    pdf.multi_cell(100, pdf.font_size * 2.5,
+                                   'Number of open cells:' + str(get_num_of_open_cells_in_ship(ship_layout)),
                                    border=0, align='j', ln=3,
                                    max_line_height=pdf.font_size)
                     pdf.ln(pdf.font_size * 2.5)
-                    pdf.multi_cell(100, pdf.font_size * 2.5, 'Path to goal:' + str(bot.path),
-                                   border=0, align='j', ln=3,
-                                   max_line_height=pdf.font_size)
-                    pdf.ln(pdf.font_size * 2.5)
-                    pdf.create_table(table_data=ship_layout, title='Ship Layout at time ' + str(number_of_steps),
+                    pdf.create_table(table_data=ship_layout, title='Init Ship Layout' + str(number_of_steps),
                                      cell_width='even')
                     pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
-                                     title='Crew Member Belief  at time ' +
+                                     title='Init Crew Member Belief ' +
                                            str(number_of_steps),
                                      cell_width='even')
                     pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
-                                     title='Alien belief  at time ' + str(number_of_steps),
+                                     title='Init Alien belief ' + str(number_of_steps),
                                      cell_width='even')
-                number_of_steps += 1
-                print(f'Timestep {number_of_steps} completed in {time.time()-start_time} seconds')
-            pdf.output('table_class.pdf')
-            if status == Status.SUCCESS:
-                print(f'Bot succeeded after {number_of_steps} steps')
-            elif status == Status.FAILURE:
-                print(f'Bot failed after {number_of_steps} steps')
+                print(ship_layout)
+                while status == Status.INPROCESS:
+                    start_time = time.time()
+                    alien_sensed = alien_sensor(bot.position, alien_positions, k, ship_dim=ship_dim)
+                    crew_member_beep = crew_member_sensor.crew_members_beep(bot.position)
+                    print(f'Crew member beep received:{crew_member_beep}')
+                    print(f'Alien sensed:{alien_sensed}')
+                    cb, ab = bot.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
+                    if is_gen_pdf:
+                        pdf.add_page()
+                        pdf.set_font("Times", size=10)
+                        pdf.multi_cell(100, pdf.font_size * 2.5, 'Crew Member beep:' + str(crew_member_beep),
+                                       border=0, align='j', ln=3, max_line_height=pdf.font_size)
+                        pdf.ln(pdf.font_size * 2.5)
+                        pdf.multi_cell(100, pdf.font_size * 2.5, 'Alien Sensed:' + str(alien_sensed), border=0, align='j',
+                                       ln=3, max_line_height=pdf.font_size)
+                        pdf.ln(pdf.font_size * 2.5)
+                    status, ship_layout, _ = bot.bot_step(ship_layout)
+                    if status != Status.INPROCESS:
+                        break
+                    status, ship_layout, alien_positions = alien_step(ship_layout, alien_positions)
+                    if is_gen_pdf:
+                        pdf.multi_cell(100, pdf.font_size * 2.5,
+                                       'Goal Postion:' + str(bot.goal[0]) + ',' + str(bot.goal[1]),
+                                       border=0, align='j', ln=3,
+                                       max_line_height=pdf.font_size)
+                        pdf.ln(pdf.font_size * 2.5)
+                        pdf.multi_cell(100, pdf.font_size * 2.5, 'Path to goal:' + str(bot.path),
+                                       border=0, align='j', ln=3,
+                                       max_line_height=pdf.font_size)
+                        pdf.ln(pdf.font_size * 2.5)
+                        pdf.create_table(table_data=ship_layout, title='Ship Layout at time ' + str(number_of_steps),
+                                         cell_width='even')
+                        pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
+                                         title='Crew Member Belief  at time ' +
+                                               str(number_of_steps),
+                                         cell_width='even')
+                        pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
+                                         title='Alien belief  at time ' + str(number_of_steps),
+                                         cell_width='even')
+                    number_of_steps += 1
+                    print(f'Timestep {number_of_steps} completed in {time.time() - start_time} seconds')
+                pdf.output('table_class.pdf')
+                if status == Status.SUCCESS:
+                    print(f'Bot succeeded after {number_of_steps} steps')
+                    avg_num_steps_save_crew += number_of_steps
+                    num_of_success += 1
+                elif status == Status.FAILURE:
+                    print(f'Bot failed after {number_of_steps} steps')
+
+
+def data_collection(ship_dim: int, number_of_aliens: int, number_of_crew_members: int,
+                    k_range: list[int], alpha_range: list[float], bot_types:list[str],
+                    sampling_index_per_layout: int = 1,
+                    sampling_index: int = 1,
+                    is_show_tkinter: bool = True, is_gen_pdf: bool = False):
+    if bot_types is None:
+        bot_types = ['BOT1']
+    for k in k_range:
+        for alpha in alpha_range:
+            run_simulation_for_n1_crew_members_n2_aliens(ship_dim,number_of_aliens,number_of_crew_members,k,alpha,
+                                                         sampling_index_per_layout,sampling_index,bot_types,
+                                                         is_show_tkinter,is_gen_pdf)
+
 
 
 def plot_metric(y, x, y_label, x_label, title):
@@ -174,7 +197,7 @@ def get_bot_object(bot_init_coordinates: tuple[int, int], init_belief_matrix_for
                     k, number_of_crew_members)
     elif bot_type == 'BOT7':
         return Bot7(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
-                    k, number_of_crew_members,open_neighbor_cells=open_neighbor_cells)
+                    k, number_of_crew_members, open_neighbor_cells=open_neighbor_cells)
     elif bot_type == 'BOT4':
         return Bot4(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
                     k, number_of_crew_members)

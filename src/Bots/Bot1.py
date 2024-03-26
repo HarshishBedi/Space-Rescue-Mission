@@ -79,17 +79,17 @@ class Bot1:
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                 self.position = next_position
-                return Status.SUCCESS, ship_layout, self.position
+                return Status.SUCCESS, ship_layout, self.position, 1
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'B&A'
                 self.position = next_position
-                return Status.FAILURE, ship_layout, self.position
+                return Status.FAILURE, ship_layout, self.position, 0
             ship_layout[self.position[0]][self.position[1]] = 'O'  # Clear the old position
             self.position = next_position
             ship_layout[self.position[0]][self.position[1]] = 'B'  # Mark the new position
             # Update the beliefs of alien and crew member positions:
             self.alien_belief[self.position[0]][self.position[1]] = 0.0
             self.crew_member_belief[self.position[0]][self.position[1]] = 0.0
-        return Status.INPROCESS, ship_layout, self.position
+        return Status.INPROCESS, ship_layout, self.position, 0
