@@ -9,9 +9,7 @@ from src.Utilities.utility import get_num_of_open_cells_in_ship, get_manhattan_d
 def initialize_belief_matrix_for_two_crew_members(ship_layout: list[list[str]]) -> np.ndarray:
     n = get_num_of_open_cells_in_ship(ship_layout)
     ship_dim = len(ship_layout)
-    belief_matrix_for_two_crew_members = np.zeros((ship_dim,ship_dim,ship_dim,ship_dim),float)
-        # [[[[
-        # 0 for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)]
+    belief_matrix_for_two_crew_members = np.zeros((ship_dim, ship_dim, ship_dim, ship_dim), float)
 
     for i1 in range(ship_dim):
         for j1 in range(ship_dim):
@@ -28,39 +26,34 @@ def get_observation_matrix_for_two_crew_members(ship_layout: list[list[str]], bo
                                                 alpha: float, is_beep: bool) -> np.ndarray:
     start_time = time.time()
     ship_dim = len(ship_layout)
-    observation_matrix_for_two_crew_members: list[list[list[list[float]]]] = [[[[
-        0 for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)]
-    for i1 in range(ship_dim):
-        for j1 in range(ship_dim):
-            for i2 in range(ship_dim):
-                for j2 in range(ship_dim):
-                    beep_probability_for_first_cell = math.exp(
-                        -alpha * (get_manhattan_distance(bot_position, (i1, j1)) - 1))
-                    beep_probability_for_second_cell = math.exp(
-                        -alpha * (get_manhattan_distance(bot_position, (i2, j2)) - 1))
-                    sum_of_beep_probabilities = beep_probability_for_first_cell + beep_probability_for_second_cell
-                    product_of_beep_probabilities = beep_probability_for_first_cell * beep_probability_for_second_cell
-                    probability_of_no_beep = (1 - beep_probability_for_first_cell) * (
-                            1 - beep_probability_for_second_cell)
-                    if is_beep:
-                        observation_matrix_for_two_crew_members[i1][j1][i2][j2] = (sum_of_beep_probabilities -
-                                                                                   product_of_beep_probabilities)
-                    else:
-                        observation_matrix_for_two_crew_members[i1][j1][i2][j2] = probability_of_no_beep
-    print(f'Time taken for generating observation matrix:{time.time()-start_time}')
-    return np.array(observation_matrix_for_two_crew_members)
+
+    # Create a grid of indices
+    i, j = np.indices((ship_dim, ship_dim))
+
+    # Calculate the Manhattan distances from the bot's position
+    d1 = np.abs(i - bot_position[0]) + np.abs(j - bot_position[1])
+    d2 = d1[..., np.newaxis, np.newaxis]
+
+    # Calculate the beep probabilities
+    beep_prob_1 = np.exp(-alpha * (d1 - 1))
+    beep_prob_2 = np.exp(-alpha * (d2 - 1))
+
+    # Calculate the observation matrix
+    if is_beep:
+        observation_matrix = beep_prob_1[..., np.newaxis, np.newaxis] + beep_prob_2 - beep_prob_1[..., np.newaxis, np.newaxis] * beep_prob_2
+    else:
+        observation_matrix = (1 - beep_prob_1[..., np.newaxis, np.newaxis]) * (1 - beep_prob_2)
+
+    print(f'Time taken for generating observation matrix: {time.time() - start_time}')
+    return observation_matrix
 
 
-def update_belief_matrix_for_two_crew_members(belief_matrix: np.array,
-                                              ship_layout: list[list[str]],
-                                              bot_position: tuple[int, int],
-                                              alpha: float,
+def update_belief_matrix_for_two_crew_members(belief_matrix: np.ndarray, ship_layout: list[list[str]],
+                                              bot_position: tuple[int, int], alpha: float,
                                               is_beep: bool) -> np.ndarray:
     start_time = time.time()
-    ship_dim = len(ship_layout)
     observation_matrix = get_observation_matrix_for_two_crew_members(ship_layout, bot_position, alpha, is_beep)
-    updated_belief = belief_matrix * observation_matrix
-    total_probability = updated_belief.sum()
-    updated_belief = updated_belief/total_probability
-    print(f'Time taken for updating 2 crew members belief:{time.time()-start_time}')
-    return updated_belief
+    updated_belief_matrix = belief_matrix * observation_matrix
+    updated_belief_matrix /= updated_belief_matrix.sum()
+    print(f'Time taken for updating 2 crew members belief:{time.time() - start_time}')
+    return updated_belief_matrix
