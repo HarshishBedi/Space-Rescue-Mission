@@ -1,7 +1,6 @@
 import time
 
 import numpy as np
-from scipy.ndimage import shift
 from src.Utilities.utility import get_num_of_open_cells_outside_radius_k, get_open_neighbors
 
 
@@ -88,7 +87,6 @@ def update_belief_matrix_for_two_aliens(belief_matrix_for_two_aliens,
     print(f'Time taken for generating alien observation matrix is {time.time() - start_time}')
     updated_belief_matrix_for_two_aliens = np.zeros((ship_dim, ship_dim, ship_dim, ship_dim), float)
     belief_matrix_for_two_aliens = belief_matrix_for_two_aliens * transition_prob
-    belief_matrix_for_two_aliens1 = shift(belief_matrix_for_two_aliens,[1,0,0,0])
     for i1 in range(ship_dim):
         for j1 in range(ship_dim):
             for i2 in range(ship_dim):
