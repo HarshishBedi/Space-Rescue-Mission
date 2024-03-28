@@ -1,4 +1,5 @@
 from collections import deque
+import numpy as np
 from src.BeliefUpdates.Aliens.OneAlien import update_belief_matrix_for_one_alien
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member, \
     initialize_belief_matrix_for_one_crew_member
@@ -40,15 +41,7 @@ class Bot3:
         return self.crew_member_belief, self.alien_belief
 
     def get_max_belief_crew_member_position(self):
-        max_belief_position = [-1, -1]
-        current_max = -1
-        for i in range(len(self.crew_member_belief)):
-            for j in range(len(self.crew_member_belief)):
-                if self.crew_member_belief[i][j] > current_max:
-                    current_max = self.crew_member_belief[i][j]
-                    max_belief_position[0] = i
-                    max_belief_position[1] = j
-        return tuple(max_belief_position)
+        return np.unravel_index(np.argmax(self.crew_member_belief), self.crew_member_belief.shape)
 
     def calculate_path(self, ship_layout):
         """

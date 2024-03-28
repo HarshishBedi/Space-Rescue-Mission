@@ -12,6 +12,7 @@ from src.BeliefUpdates.Aliens.TwoAliens import initialize_belief_matrix_for_two_
 from src.BeliefUpdates.CrewMembers.OneCrewMember import initialize_belief_matrix_for_one_crew_member
 from src.BeliefUpdates.CrewMembers.TwoCrewMembers import initialize_belief_matrix_for_two_crew_members
 from src.Bots.Bot1 import Bot1
+from src.Bots.Bot2 import Bot2
 from src.Bots.Bot3 import Bot3
 from src.Bots.Bot4 import Bot4
 from src.Bots.Bot7 import Bot7
@@ -203,8 +204,9 @@ def data_collection(ship_dim: int, number_of_aliens: int, number_of_crew_members
 
 
 def save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, k_range, success_prob):
-    results_root_dir = ('C://Users//harsh//OneDrive//Desktop//Rutgers//Sem1//Intro to AI//Project '
-                        '2//Space-Rescue-Mission//Results')
+    results_root_dir = ('C://Users//ASUS//OneDrive//Desktop//MS Rutgers//Spring 2024//Intro to '
+                        'AI//Projects//Space-Rescue-Mission//Results')
+
     if os.path.exists(results_root_dir):
         shutil.rmtree(results_root_dir)
     os.mkdir(results_root_dir)
@@ -278,7 +280,8 @@ def get_bot_object(bot_init_coordinates: tuple[int, int], init_belief_matrix_for
         return Bot1(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate,
                     alpha, k)
     elif bot_type == 'BOT2':
-        return None
+        return Bot2(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate,
+                    alpha, k)
     elif bot_type == 'BOT3':
         return Bot3(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
                     k, number_of_crew_members)

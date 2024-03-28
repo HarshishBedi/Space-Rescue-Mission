@@ -1,3 +1,4 @@
+import numpy as np
 from fpdf import FPDF
 
 
@@ -40,6 +41,7 @@ def get_open_neighbors(position: tuple[int, int], ship_layout: list[list[str]]) 
             neighbors.append((neighbor_x, neighbor_y))
     return neighbors
 
+
 def open_neighbor_cells_matrix(ship_layout):
     ship_dim = len(ship_layout)
     open_neighbor_cells = [[[] for i in range(ship_dim)] for j in range(ship_dim)]
@@ -60,3 +62,27 @@ def append_to_pdf(data):
             for datum in data_row:
                 row.cell(datum)
     pdf.output('table.pdf')
+
+
+def calculate_information_gain(belief_matrix, current_position, new_position):
+    """
+    Calculate the expected information gain from moving to the new position
+    based on the reduction in entropy of the belief matrix.
+    """
+    # Calculate the entropy of the current and new positions
+    current_entropy = entropy(belief_matrix[current_position[0], current_position[1]])
+    new_entropy = entropy(belief_matrix[new_position[0], new_position[1]])
+
+    # Information gain is the reduction in entropy
+    info_gain = current_entropy - new_entropy
+
+    return info_gain
+
+
+def entropy(probability):
+    """
+    Calculate the entropy of a probability distribution.
+    """
+    if probability == 0 or probability == 1:
+        return 0
+    return -probability * np.log2(probability) - (1 - probability) * np.log2(1 - probability)
