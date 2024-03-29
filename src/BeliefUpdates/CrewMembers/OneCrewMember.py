@@ -22,7 +22,7 @@ def get_observation_matrix_for_one_crew_member(ship_layout: list[list[str]], bot
 
 
 def update_belief_matrix_for_one_crew_member(belief_matrix: np.ndarray, ship_layout: list[list[str]],
-                                             bot_position: tuple[int, int], alpha: float, is_beep: bool) -> np.ndarray:
+                                             bot_position, alpha: float, is_beep: bool) -> np.ndarray:
     observation_matrix = get_observation_matrix_for_one_crew_member(ship_layout, bot_position, alpha, is_beep)
     updated_belief_matrix = belief_matrix * observation_matrix
     total_probability = updated_belief_matrix.sum()

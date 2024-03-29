@@ -86,10 +86,9 @@ class Bot3:
         path = self.calculate_path(ship_layout)
         self.path = path
         if path:
-            print(f'Path:{path}')
             next_position = path[0]
-            print(f'next position:{next_position}')
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
+                print('Crew Member found')
                 self.num_of_crew_members_saved += 1
                 self.crew_member_belief = initialize_belief_matrix_for_one_crew_member(ship_layout)
                 if self.num_of_crew_members_saved == self.number_of_crew_members:
