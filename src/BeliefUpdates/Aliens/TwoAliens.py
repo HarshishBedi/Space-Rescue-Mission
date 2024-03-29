@@ -5,10 +5,9 @@ from src.Utilities.utility import get_num_of_open_cells_outside_radius_k, get_op
 
 
 def initialize_belief_matrix_for_two_aliens(ship_layout: list[list[str]],
-                                            bot_position: tuple[int, int], k: int) -> list[list[list[list[float]]]]:
+                                            bot_position: tuple[int, int], k: int) -> np.ndarray:
     ship_dim = len(ship_layout)
-    belief_matrix_for_two_aliens: list[list[list[list[float]]]] = [[[[
-        0 for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)]
+    belief_matrix_for_two_aliens = np.zeros((ship_dim, ship_dim, ship_dim, ship_dim), float)
     n = get_num_of_open_cells_outside_radius_k(ship_layout, bot_position, k)
 
     # Define the boundaries of the square centered at the bot's position
@@ -31,10 +30,9 @@ def initialize_belief_matrix_for_two_aliens(ship_layout: list[list[str]],
 
 
 def get_observation_matrix_for_two_aliens(ship_layout: list[list[str]], bot_position: tuple[int, int],
-                                          k: int, alien_sensed: bool) -> list[list[list[list[float]]]]:
+                                          k: int, alien_sensed: bool) -> np.ndarray:
     ship_dim = len(ship_layout)
-    observation_matrix_for_two_aliens: list[list[list[list[float]]]] = [[[[
-        0 for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)] for _ in range(ship_dim)]
+    observation_matrix_for_two_aliens = np.zeros((ship_dim, ship_dim, ship_dim, ship_dim), float)
 
     # Define the boundaries of the square centered at the bot's position
     top = max(0, bot_position[0] - k)
@@ -61,30 +59,27 @@ def get_observation_matrix_for_two_aliens(ship_layout: list[list[str]], bot_posi
     return observation_matrix_for_two_aliens
 
 
-def get_transition_prob(open_neighbor_cells, ship_dim):
-    # print(f'Ship dim received: {ship_dim}')
-    transition_prob = np.zeros((ship_dim, ship_dim, ship_dim, ship_dim), float)
-    print(transition_prob.shape)
-    for i in range(ship_dim):
-        for j in range(ship_dim):
-            for k in range(ship_dim):
-                for l in range(ship_dim):
-                    if len(open_neighbor_cells[i][j]) != 0 and len(open_neighbor_cells[k][l]) != 0:
-                        transition_prob[i][j][k][l] = 1 / (
-                                    len(open_neighbor_cells[i][j]) * len(open_neighbor_cells[k][l]))
+def get_transition_prob(open_neighbor_cells):
+    # Convert the list of open neighbor cells to a 2D array of counts
+    open_neighbor_counts = np.array([[len(neighbors) for neighbors in row] for row in open_neighbor_cells], dtype=float)
+
+    # Avoid division by zero by setting zero counts to infinity (so that 1 / count will be zero)
+    open_neighbor_counts[open_neighbor_counts == 0] = np.inf
+
+    # Calculate the transition probabilities using broadcasting
+    transition_prob = 1 / open_neighbor_counts[:, :, None, None] / open_neighbor_counts[None, None, :, :]
     return transition_prob
 
 
-def update_belief_matrix_for_two_aliens(belief_matrix_for_two_aliens,
+def update_belief_matrix_for_two_aliens(belief_matrix_for_two_aliens: np.ndarray,
                                         ship_layout: list[list[str]],
                                         bot_position: tuple[int, int],
                                         k: int, alien_sensed: bool, transition_prob,
-                                        open_neighbor_cells) -> list[list[list[list[float]]]]:
+                                        open_neighbor_cells) -> np.ndarray:
+    start = time.time()
     ship_dim = len(ship_layout)
-    start_time = time.time()
     observation_matrix_for_two_aliens = get_observation_matrix_for_two_aliens(ship_layout, bot_position, k,
                                                                               alien_sensed)
-    print(f'Time taken for generating alien observation matrix is {time.time() - start_time}')
     updated_belief_matrix_for_two_aliens = np.zeros((ship_dim, ship_dim, ship_dim, ship_dim), float)
     belief_matrix_for_two_aliens = belief_matrix_for_two_aliens * transition_prob
     for i1 in range(ship_dim):
@@ -104,4 +99,5 @@ def update_belief_matrix_for_two_aliens(belief_matrix_for_two_aliens,
     # Normalize the updated belief matrix for two aliens
     total_probability = updated_belief_matrix_for_two_aliens.sum()
     updated_belief_matrix_for_two_aliens = updated_belief_matrix_for_two_aliens / total_probability
+    print(f"Time taken for updating belief: {time.time() - start}")
     return updated_belief_matrix_for_two_aliens

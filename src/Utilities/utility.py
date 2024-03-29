@@ -47,8 +47,9 @@ def open_neighbor_cells_matrix(ship_layout):
     open_neighbor_cells = [[[] for i in range(ship_dim)] for j in range(ship_dim)]
     for i in range(ship_dim):
         for j in range(ship_dim):
-            neighbors = get_open_neighbors((i,j),ship_layout)
-            open_neighbor_cells[i][j] = neighbors
+            if ship_layout[i][j] != 'C':
+                neighbors = get_open_neighbors((i,j),ship_layout)
+                open_neighbor_cells[i][j] = neighbors
     return open_neighbor_cells
 
 
