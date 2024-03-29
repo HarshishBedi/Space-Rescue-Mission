@@ -1,6 +1,8 @@
 import numpy as np
 from fpdf import FPDF
 
+from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
+
 
 def get_num_of_open_cells_in_ship(ship_layout: list[list[str]]):
     return sum(ship_layout[i][j] != 'C' for i in range(len(ship_layout)) for j in range(len(ship_layout[i])))
@@ -47,7 +49,7 @@ def open_neighbor_cells_matrix(ship_layout):
     open_neighbor_cells = [[[] for i in range(ship_dim)] for j in range(ship_dim)]
     for i in range(ship_dim):
         for j in range(ship_dim):
-            neighbors = get_open_neighbors((i,j),ship_layout)
+            neighbors = get_open_neighbors((i, j), ship_layout)
             open_neighbor_cells[i][j] = neighbors
     return open_neighbor_cells
 
@@ -64,10 +66,27 @@ def append_to_pdf(data):
     pdf.output('table.pdf')
 
 
-def calculate_information_gain(belief_matrix):
-    mean_belief = np.mean(belief_matrix)
-    info_gain = belief_matrix - mean_belief
+def calculate_information_gain(belief_matrix, ship_layout, alpha):
+    # TODO: method needs to be optimized
+    ship_dim = len(belief_matrix)
+    original_entropy = calculate_entropy(belief_matrix)
+    info_gain = np.zeros((ship_dim, ship_dim), float)
+    for i in range(ship_dim):
+        for j in range(ship_dim):
+            info_gain = original_entropy - (belief_matrix[i][j] * calculate_entropy(
+                update_belief_matrix_for_one_crew_member(belief_matrix, ship_layout,
+                                                         (i, j), alpha, True)) + (
+                                 1 - belief_matrix[i][j]) * calculate_entropy(
+                             update_belief_matrix_for_one_crew_member(belief_matrix, ship_layout,
+                                                                      (i, j), alpha, False)))
     return info_gain
+
+
+def calculate_entropy(belief_matrix):
+    """Calculate the entropy of the belief distribution."""
+    # Filter out zero probabilities to avoid log(0)
+    non_zero_beliefs = belief_matrix[belief_matrix > 0]
+    return -np.sum(non_zero_beliefs * np.log(non_zero_beliefs))
 
 
 def entropy(probability):

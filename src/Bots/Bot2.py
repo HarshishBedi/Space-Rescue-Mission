@@ -13,7 +13,7 @@ class Bot2:
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
-        self.utility_weights = {'proximity': 0.4, 'risk': 0.1, 'information_gain': 0.3, 'success': 0.4}
+        self.utility_weights = {'proximity': 0.4, 'risk': 0.2, 'information_gain': 0.2, 'success': 0.4}
         self.goal = (-1, -1)
         self.path = []
 
@@ -24,8 +24,8 @@ class Bot2:
             self.alien_belief, ship_layout, self.position, self.k, alien_beep)
         return self.crew_member_belief, self.alien_belief
 
-    def calculate_utility(self):
-        information_gain = calculate_information_gain(self.crew_member_belief)
+    def calculate_utility(self,ship_layout):
+        information_gain = calculate_information_gain(self.crew_member_belief,ship_layout,self.alpha)
         utility = (self.utility_weights['success'] * self.crew_member_belief -
                    self.utility_weights['risk'] * self.alien_belief +
                    self.utility_weights['information_gain'] * information_gain)
@@ -69,7 +69,7 @@ class Bot2:
         return Status.INPROCESS, ship_layout, self.position, 0
 
     def calculate_path(self, ship_layout):
-        utility = self.calculate_utility()
+        utility = self.calculate_utility(ship_layout)
         max_utility_posn = np.unravel_index(np.argmax(utility), utility.shape)
         self.goal = max_utility_posn
         fringe = deque([(self.position, deque())])
