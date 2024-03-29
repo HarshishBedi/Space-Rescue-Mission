@@ -27,7 +27,7 @@ class Bot7:
         self.goal = (-1, -1)
         self.path = None
         self.open_neighbor_cells = open_neighbor_cells
-        self.transition_prob = get_transition_prob(open_neighbor_cells, len(alien_belief))
+        self.transition_prob = get_transition_prob(open_neighbor_cells)
 
     def update_beliefs(self, ship_layout: list[list[str]], alien_beep: bool, crew_member_beep: bool):
         """
