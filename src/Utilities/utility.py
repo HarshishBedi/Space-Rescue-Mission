@@ -64,18 +64,9 @@ def append_to_pdf(data):
     pdf.output('table.pdf')
 
 
-def calculate_information_gain(belief_matrix, current_position, new_position):
-    """
-    Calculate the expected information gain from moving to the new position
-    based on the reduction in entropy of the belief matrix.
-    """
-    # Calculate the entropy of the current and new positions
-    current_entropy = entropy(belief_matrix[current_position[0], current_position[1]])
-    new_entropy = entropy(belief_matrix[new_position[0], new_position[1]])
-
-    # Information gain is the reduction in entropy
-    info_gain = current_entropy - new_entropy
-
+def calculate_information_gain(belief_matrix):
+    mean_belief = np.mean(belief_matrix)
+    info_gain = belief_matrix - mean_belief
     return info_gain
 
 
@@ -86,3 +77,7 @@ def entropy(probability):
     if probability == 0 or probability == 1:
         return 0
     return -probability * np.log2(probability) - (1 - probability) * np.log2(1 - probability)
+
+
+def marginalize_crew_belief(crew_member_belief, axis):
+    return crew_member_belief.sum(axis=axis)

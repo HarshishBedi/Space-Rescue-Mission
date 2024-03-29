@@ -23,7 +23,6 @@ def initialize_belief_matrix_for_two_crew_members(ship_layout: list[list[str]]) 
 
 
 def get_observation_matrix_for_two_crew_members(ship_layout, bot_position, alpha, is_beep):
-    start_time = time.time()
     ship_dim = len(ship_layout)
     i1, j1, i2, j2 = np.ogrid[:ship_dim, :ship_dim, :ship_dim, :ship_dim]
     d1 = np.abs(i1 - bot_position[0]) + np.abs(j1 - bot_position[1])
@@ -36,16 +35,13 @@ def get_observation_matrix_for_two_crew_members(ship_layout, bot_position, alpha
     else:
         observation_matrix = (1 - beep_prob_1) * (1 - beep_prob_2)
 
-    print(f'Time taken for generating observation matrix: {time.time() - start_time}')
     return observation_matrix
 
 
 def update_belief_matrix_for_two_crew_members(belief_matrix: np.ndarray, ship_layout: list[list[str]],
                                               bot_position: tuple[int, int], alpha: float,
                                               is_beep: bool) -> np.ndarray:
-    start_time = time.time()
     observation_matrix = get_observation_matrix_for_two_crew_members(ship_layout, bot_position, alpha, is_beep)
     updated_belief_matrix = belief_matrix * observation_matrix
     updated_belief_matrix /= updated_belief_matrix.sum()
-    print(f'Time taken for updating 2 crew members belief:{time.time() - start_time}')
     return updated_belief_matrix

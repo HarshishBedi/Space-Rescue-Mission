@@ -1,17 +1,13 @@
-import time
 from collections import deque
-
 import numpy as np
-
 from src.BeliefUpdates.Aliens.OneAlien import update_belief_matrix_for_one_alien
-from src.BeliefUpdates.Aliens.TwoAliens import update_belief_matrix_for_two_aliens
-from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
-from src.BeliefUpdates.CrewMembers.TwoCrewMembers import update_belief_matrix_for_two_crew_members
+from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member, \
+    initialize_belief_matrix_for_one_crew_member
 from src.Utilities.Status import Status
-from src.Utilities.utility import get_open_neighbors, marginalize_crew_belief
+from src.Utilities.utility import get_open_neighbors
 
 
-class Bot4:
+class Bot6:
     def __init__(self, bot_init_coords: tuple[int, int], alien_belief,
                  crew_member_belief, alpha: float, k: int, number_of_crew_members: int = 2):
         """
@@ -38,26 +34,15 @@ class Bot4:
         :param crew_member_beep:
         :return:
         """
-        if self.num_of_crew_members_saved == 0:
-            self.crew_member_belief = update_belief_matrix_for_two_crew_members(self.crew_member_belief, ship_layout,
-                                                                                self.position, self.alpha,
-                                                                                crew_member_beep)
-        else:
-            self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
-                                                                               self.position, self.alpha,
-                                                                               crew_member_beep)
+        self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
+                                                                           self.position, self.alpha, crew_member_beep)
         self.alien_belief = update_belief_matrix_for_one_alien(self.alien_belief, ship_layout, self.position,
                                                                self.k, alien_beep)
         return self.crew_member_belief, self.alien_belief
 
     def get_max_belief_crew_member_position(self):
-        max_indices = np.unravel_index(np.argmax(self.crew_member_belief), self.crew_member_belief.shape)
-        if self.num_of_crew_members_saved == 0:
-            if np.sum(self.crew_member_belief, (2, 3))[max_indices[0]][max_indices[1]] > \
-                    np.sum(self.crew_member_belief, (0, 1))[max_indices[2]][max_indices[3]]:
-                return max_indices[0], max_indices[1]
-            return max_indices[2], max_indices[3]
-        return max_indices
+        return np.unravel_index(np.argmax(self.crew_member_belief), self.crew_member_belief.shape)
+
     def calculate_path(self, ship_layout):
         """
         :param ship_layout:
@@ -101,16 +86,17 @@ class Bot4:
         path = self.calculate_path(ship_layout)
         self.path = path
         if path:
+            print(f'Path:{path}')
             next_position = path[0]
+            print(f'next position:{next_position}')
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
-                print('Crew Member found')
                 self.num_of_crew_members_saved += 1
+                self.crew_member_belief = initialize_belief_matrix_for_one_crew_member(ship_layout)
                 if self.num_of_crew_members_saved == self.number_of_crew_members:
                     ship_layout[self.position[0]][self.position[1]] = 'O'
                     ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                     self.position = next_position
                     return Status.SUCCESS, ship_layout, self.position, self.num_of_crew_members_saved
-                self.crew_member_belief = marginalize_crew_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
@@ -121,16 +107,6 @@ class Bot4:
             self.position = next_position
             ship_layout[self.position[0]][self.position[1]] = 'B'  # Mark the new position
             # Update the beliefs of alien and crew member positions:
-            self.update_belief_based_on_bot_step(ship_layout)
-        return Status.INPROCESS, ship_layout, self.position, self.num_of_crew_members_saved
-
-    def update_belief_based_on_bot_step(self, ship_layout):
-        ship_dim = len(ship_layout)
-        self.alien_belief[self.position[0]][self.position[1]] = 0.0
-        if self.num_of_crew_members_saved == 0:
-            for i in range(ship_dim):
-                for j in range(ship_dim):
-                    self.crew_member_belief[i][j][self.position[0]][self.position[1]] = 0.0
-                    self.crew_member_belief[self.position[0]][self.position[1]][i][j] = 0.0
-        elif self.num_of_crew_members_saved == 1:
+            self.alien_belief[self.position[0]][self.position[1]] = 0.0
             self.crew_member_belief[self.position[0]][self.position[1]] = 0.0
+        return Status.INPROCESS, ship_layout, self.position, self.num_of_crew_members_saved

@@ -4,12 +4,12 @@ from src.BeliefUpdates.Aliens.TwoAliens import update_belief_matrix_for_two_alie
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
 from src.BeliefUpdates.CrewMembers.TwoCrewMembers import update_belief_matrix_for_two_crew_members
 from src.Utilities.Status import Status
-from src.Utilities.utility import get_open_neighbors
+from src.Utilities.utility import get_open_neighbors, marginalize_crew_belief
 
 
 class Bot7:
     def __init__(self, bot_init_coords: tuple[int, int], alien_belief,
-                 crew_member_belief, alpha: float, k: int, number_of_crew_members: int = 2,open_neighbor_cells=[]):
+                 crew_member_belief, alpha: float, k: int, number_of_crew_members: int = 2, open_neighbor_cells=[]):
         """
         :param bot_init_coords:
         :param alien_belief:
@@ -27,7 +27,7 @@ class Bot7:
         self.goal = (-1, -1)
         self.path = None
         self.open_neighbor_cells = open_neighbor_cells
-        self.transition_prob = get_transition_prob(open_neighbor_cells,len(alien_belief))
+        self.transition_prob = get_transition_prob(open_neighbor_cells, len(alien_belief))
 
     def update_beliefs(self, ship_layout: list[list[str]], alien_beep: bool, crew_member_beep: bool):
         """
@@ -36,12 +36,18 @@ class Bot7:
         :param crew_member_beep:
         :return:
         """
-        self.crew_member_belief = update_belief_matrix_for_two_crew_members(self.crew_member_belief, ship_layout,
-                                                                            self.position, self.alpha, crew_member_beep)
+        if self.num_of_crew_members_saved == 0:
+            self.crew_member_belief = update_belief_matrix_for_two_crew_members(self.crew_member_belief, ship_layout,
+                                                                                self.position, self.alpha,
+                                                                                crew_member_beep)
+        else:
+            self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
+                                                                               self.position, self.alpha,
+                                                                               crew_member_beep)
         self.alien_belief = update_belief_matrix_for_two_aliens(self.alien_belief, ship_layout, self.position,
                                                                 self.k, alien_beep,
                                                                 open_neighbor_cells=self.open_neighbor_cells,
-                                                                transition_prob = self.transition_prob)
+                                                                transition_prob=self.transition_prob)
         return self.crew_member_belief, self.alien_belief
 
     def get_max_belief_crew_member_position(self):
@@ -69,7 +75,7 @@ class Bot7:
         visited = {self.position}  # Keep track of visited positions to avoid loops
         neighbors = get_open_neighbors(self.position, ship_layout)
         for neighbor in neighbors:
-            if self.is_cell_alien_safe(neighbor,ship_layout):
+            if self.is_cell_alien_safe(neighbor, ship_layout):
                 fringe.append((neighbor, deque([neighbor])))
                 visited.add(neighbor)
         if len(fringe) > 1:
@@ -110,6 +116,7 @@ class Bot7:
                     ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                     self.position = next_position
                     return Status.SUCCESS, ship_layout, self.position, self.num_of_crew_members_saved
+                self.crew_member_belief = marginalize_crew_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'

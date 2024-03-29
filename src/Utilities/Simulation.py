@@ -15,6 +15,7 @@ from src.Bots.Bot1 import Bot1
 from src.Bots.Bot2 import Bot2
 from src.Bots.Bot3 import Bot3
 from src.Bots.Bot4 import Bot4
+from src.Bots.Bot6 import Bot6
 from src.Bots.Bot7 import Bot7
 from src.Utilities.Alien import alien_step
 from src.Utilities.Alien_Sensor import alien_sensor
@@ -47,8 +48,16 @@ def show_tkinter(ship_layout: list[list[str]]):
 def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens: int, number_of_crew_members: int,
                                                  k: int, alpha: float, sampling_index_per_layout: int = 1,
                                                  sampling_index: int = 1, bot_types: list[str] = [],
-                                                 is_show_tkinter: bool = True, is_gen_pdf: bool = False):
+                                                 is_show_tkinter: bool = True, is_gen_pdf: bool = False,
+                                                 avg_num_steps_save_crew=None,
+                                                 success_prob=None,
+                                                 avg_num_crew_saved=None, k_index=0, alpha_index=0):
     """
+    :param avg_num_steps_save_crew:
+    :param success_prob:
+    :param avg_num_crew_saved:
+    :param alpha_index:
+    :param k_index:
     :param bot_type:
     :param alpha:
     :param k: radius for the bot's alien sensor
@@ -60,10 +69,9 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
     :param is_show_tkinter:
     :return:
     """
+    if avg_num_steps_save_crew is None or avg_num_crew_saved is None or success_prob is None:
+        raise Exception("Dictionary for storing metrics is None")
     ship = Ship(ship_dim)
-    avg_num_steps_save_crew = 0
-    num_of_success = 0
-    avg_num_crew_saved = 0
     for i in range(sampling_index):
         ship_layout, root_open_square = ship.generate_ship_layout()
         open_neighbor_cells = open_neighbor_cells_matrix(ship_layout)
@@ -76,7 +84,7 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
             for bot_type in bot_types:
                 start_time = time.time()
                 print('***************************')
-                print(f'Running simulation for {i}th ship and {j}th time')
+                print(f'Running simulation for {i}th ship and {j}th time with {bot_type}')
 
                 temp_ship_layout = copy.deepcopy(ship_layout)
                 temp_alien_positions = copy.deepcopy(alien_positions)
@@ -88,19 +96,26 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
                                                                                    number_of_crew_members,
                                                                                    open_neighbor_cells,
                                                                                    ship_dim, temp_ship_layout)
-                avg_num_crew_saved += num_crew_saved
+                avg_num_crew_saved[bot_type][k_index][alpha_index] += num_crew_saved
                 if status == Status.SUCCESS:
-                    print(f'Bot succeeded after {number_of_steps} steps')
-                    avg_num_steps_save_crew += number_of_steps
-                    num_of_success += 1
+                    print(f'{bot_type} succeeded after {number_of_steps} steps')
+                    avg_num_steps_save_crew[bot_type][k_index][alpha_index] += number_of_steps
+                    success_prob[bot_type][k_index][alpha_index] += 1
                 elif status == Status.FAILURE:
-                    print(f'Bot failed after {number_of_steps} steps')
-                print(f'Completed simulation for {i}th ship and {j}th time in {time.time()-start_time} seconds')
+                    print(f'{bot_type} failed after {number_of_steps} steps')
+                print(f'Completed {bot_type} simulation for {i}th ship and {j}th time in {time.time() - start_time} '
+                      f'seconds')
                 print('***************************')
-    success_prob = num_of_success / (sampling_index * sampling_index_per_layout)
-    avg_num_steps_save_crew = avg_num_steps_save_crew / num_of_success if num_of_success != 0.0 else float('inf')
-    avg_num_crew_saved = avg_num_crew_saved / (sampling_index * sampling_index_per_layout)
-    return avg_num_steps_save_crew, success_prob, avg_num_crew_saved
+    for bot_type in bot_types:
+        avg_num_steps_save_crew[bot_type][k_index][alpha_index] = avg_num_steps_save_crew[bot_type][k_index][
+                                                                      alpha_index] / success_prob[bot_type][k_index][
+                                                                      alpha_index] if success_prob[bot_type][k_index][
+                                                                                          alpha_index] != 0.0 else float(
+            'inf')
+        success_prob[bot_type][k_index][alpha_index] = success_prob[bot_type][k_index][alpha_index] / (
+                    sampling_index * sampling_index_per_layout)
+        avg_num_crew_saved[bot_type][k_index][alpha_index] = avg_num_crew_saved[bot_type][k_index][alpha_index] / (
+                    sampling_index * sampling_index_per_layout)
 
 
 def simulate_for_bot_k_alpha(alien_positions, alpha, bot_init_coordinates, bot_type, crew_member_positions, is_gen_pdf,
@@ -134,11 +149,8 @@ def simulate_for_bot_k_alpha(alien_positions, alpha, bot_init_coordinates, bot_t
                          title='Init Alien belief ' + str(number_of_steps),
                          cell_width='even')
     while status == Status.INPROCESS:
-        start_time = time.time()
         alien_sensed = alien_sensor(bot.position, alien_positions, k, ship_dim=ship_dim)
         crew_member_beep = crew_member_sensor.crew_members_beep(bot.position)
-        # print(f'Crew member beep received:{crew_member_beep}')
-        # print(f'Alien sensed:{alien_sensed}')
         bot.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
         if is_gen_pdf:
             pdf.add_page()
@@ -174,7 +186,8 @@ def simulate_for_bot_k_alpha(alien_positions, alpha, bot_init_coordinates, bot_t
                              title='Alien belief  at time ' + str(number_of_steps),
                              cell_width='even')
         number_of_steps += 1
-        # print(f'Timestep {number_of_steps} completed in {time.time() - start_time} seconds')
+        if number_of_steps == 10000:
+            status = Status.FAILURE
     pdf.output('table_class.pdf')
     return num_crew_saved, number_of_steps, status
 
@@ -186,26 +199,33 @@ def data_collection(ship_dim: int, number_of_aliens: int, number_of_crew_members
                     is_show_tkinter: bool = True, is_gen_pdf: bool = False):
     if bot_types is None:
         bot_types = []
-    avg_num_steps_save_crew = np.zeros((len(k_range),len(alpha_range)), float)
-    success_prob = np.zeros((len(k_range),len(alpha_range)), float)
-    avg_num_crew_saved = np.zeros((len(k_range),len(alpha_range)), float)
+    avg_num_steps_save_crew = {}
+    success_prob = {}
+    avg_num_crew_saved = {}
+    for bot_type in bot_types:
+        avg_num_steps_save_crew[bot_type] = np.zeros((len(k_range), len(alpha_range)), float)
+        success_prob[bot_type] = np.zeros((len(k_range), len(alpha_range)), float)
+        avg_num_crew_saved[bot_type] = np.zeros((len(k_range), len(alpha_range)), float)
     for i in range(len(k_range)):
         for j in range(len(alpha_range)):
             alpha = alpha_range[j]
             k = k_range[i]
-            (avg_num_steps_save_crew[i][j],
-             success_prob[i][j],
-             avg_num_crew_saved[i][j]) = run_simulation_for_n1_crew_members_n2_aliens(ship_dim, number_of_aliens,
-                                                                                      number_of_crew_members, k, alpha,
-                                                                                      sampling_index_per_layout,
-                                                                                      sampling_index, bot_types,
-                                                                                      is_show_tkinter, is_gen_pdf)
-    save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, k_range, success_prob)
+            run_simulation_for_n1_crew_members_n2_aliens(ship_dim, number_of_aliens,
+                                                         number_of_crew_members, k, alpha,
+                                                         sampling_index_per_layout,
+                                                         sampling_index, bot_types,
+                                                         is_show_tkinter, is_gen_pdf,
+                                                         avg_num_steps_save_crew,
+                                                         success_prob,
+                                                         avg_num_crew_saved, i, j)
+    save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, k_range, success_prob, bot_types)
 
 
-def save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, k_range, success_prob):
-    results_root_dir = ('C://Users//ASUS//OneDrive//Desktop//MS Rutgers//Spring 2024//Intro to '
-                        'AI//Projects//Space-Rescue-Mission//Results')
+def save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, k_range, success_prob, bot_types=None):
+    if bot_types is None:
+        bot_types = []
+    results_root_dir = ('C://Users//harsh//OneDrive//Desktop//Rutgers//Sem1//Intro to AI//Project '
+                        '2//Space-Rescue-Mission//Results')
 
     if os.path.exists(results_root_dir):
         shutil.rmtree(results_root_dir)
@@ -214,48 +234,52 @@ def save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, 
         k_dir = results_root_dir + '//alpha_range_k' + str(k_range[i])
         os.mkdir(k_dir)
         avg_num_steps_save_crew_path = k_dir + '//metric-1.pdf'
-        plot_metric(avg_num_steps_save_crew[i, :], alpha_range, 'Average Number of steps to save crew',
+        plot_metric(avg_num_steps_save_crew, alpha_range, 'Average Number of steps to save crew',
                     'Alpha values',
                     'Average number of moves needed to rescue all crew members over range of alpha values '
-                    'and k=' + str(k_range[i]), avg_num_steps_save_crew_path)
+                    'and k=' + str(k_range[i]), avg_num_steps_save_crew_path, index=i, is_alpha_range=True,
+                    bot_types=bot_types)
         success_prob_path = k_dir + '//metric-2.pdf'
-        plot_metric(success_prob[i, :], alpha_range, 'Success Probability of the bot',
+        plot_metric(success_prob, alpha_range, 'Success Probability of the bot',
                     'Alpha values',
                     'Probability of successfully avoiding the alien and rescuing the crew over range of alpha values '
-                    'and k=' + str(k_range[i]), success_prob_path)
+                    'and k=' + str(k_range[i]), success_prob_path, index=i, is_alpha_range=True, bot_types=bot_types)
         avg_num_crew_saved_path = k_dir + '//metric-3.pdf'
-        plot_metric(avg_num_crew_saved[i, :], alpha_range, 'Average number of crew members saved',
+        plot_metric(avg_num_crew_saved, alpha_range, 'Average number of crew members saved',
                     'Alpha values',
                     'Average number of crew members saved over range of alpha values and k=' + str(k_range[i]),
-                    avg_num_crew_saved_path)
+                    avg_num_crew_saved_path, index=i, is_alpha_range=True, bot_types=bot_types)
     for i in range(len(alpha_range)):
         alpha_dir = results_root_dir + '//k_range_alpha' + str(alpha_range[i])
         os.mkdir(alpha_dir)
         avg_num_steps_save_crew_path = alpha_dir + '//metric-1.pdf'
-        plot_metric(avg_num_steps_save_crew[:, i], k_range, 'Average Number of steps to save crew',
+        plot_metric(avg_num_steps_save_crew, k_range, 'Average Number of steps to save crew',
                     'Alpha values',
                     'Average number of moves needed to rescue all crew members over range of k values '
-                    'and alpha =' + str(alpha_range[i]), avg_num_steps_save_crew_path)
+                    'and alpha =' + str(alpha_range[i]), avg_num_steps_save_crew_path, index=i, is_alpha_range=False,
+                    bot_types=bot_types)
         success_prob_path = alpha_dir + '//metric-2.pdf'
-        plot_metric(success_prob[:, i], k_range, 'Success Probability of the bot',
+        plot_metric(success_prob, k_range, 'Success Probability of the bot',
                     'Alpha values',
                     'Probability of successfully avoiding the alien and rescuing the crew over range of k values '
-                    'and alpha =' + str(alpha_range[i]), success_prob_path)
+                    'and alpha =' + str(alpha_range[i]), success_prob_path, index=i, is_alpha_range=False,
+                    bot_types=bot_types)
         avg_num_crew_saved_path = alpha_dir + '//metric-3.pdf'
-        plot_metric(avg_num_crew_saved[:, i], k_range, 'Average number of crew members saved',
+        plot_metric(avg_num_crew_saved, k_range, 'Average number of crew members saved',
                     'Alpha values',
                     'Average number of crew members saved over range of k values and alpha =' + str(alpha_range[i]),
-                    avg_num_crew_saved_path)
+                    avg_num_crew_saved_path, index=i, is_alpha_range=False, bot_types=bot_types)
 
 
-def plot_metric(y, x, y_label, x_label, title, file_path):
+def plot_metric(y, x, y_label, x_label, title, file_path, index=0, is_alpha_range=True, bot_types=None):
+    if bot_types is None:
+        bot_types = []
     fig, (graph) = plt.subplots(1, 1, figsize=(12, 10))
-    print(title)
-    print(y)
-    print(x)
-    for i in range(1):
-        logging.info(f'The bot:{i}')
-        graph.plot(x, y, label='1')
+    for bot_type in bot_types:
+        if is_alpha_range:
+            graph.plot(x, y[bot_type][index, :], label=bot_type)
+        else:
+            graph.plot(x, y[bot_type][:, index], label=bot_type)
     graph.set_title(title)
     graph.set_xlabel(x_label)
     graph.set_ylabel(y_label)
@@ -285,12 +309,15 @@ def get_bot_object(bot_init_coordinates: tuple[int, int], init_belief_matrix_for
     elif bot_type == 'BOT3':
         return Bot3(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
                     k, number_of_crew_members)
-    elif bot_type == 'BOT7':
-        return Bot7(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
-                    k, number_of_crew_members, open_neighbor_cells=open_neighbor_cells)
     elif bot_type == 'BOT4':
         return Bot4(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
                     k, number_of_crew_members)
+    elif bot_type == 'BOT6':
+        return Bot6(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
+                    k, number_of_crew_members)
+    elif bot_type == 'BOT7':
+        return Bot7(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
+                    k, number_of_crew_members, open_neighbor_cells=open_neighbor_cells)
 
 
 def init_belief(bot_type: str, ship_layout, bot_init_coordinates, k):
