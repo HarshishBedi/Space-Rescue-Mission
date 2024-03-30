@@ -68,7 +68,6 @@ def append_to_pdf(data):
 
 
 def calculate_information_gain(belief_matrix, ship_layout, alpha):
-    start = time.time()
     ship_dim = len(ship_layout)
     original_entropy = calculate_entropy(belief_matrix)
 
