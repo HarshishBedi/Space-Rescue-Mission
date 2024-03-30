@@ -80,6 +80,7 @@ def update_belief_matrix_for_two_aliens(belief_matrix_for_two_aliens: np.ndarray
     ship_dim = len(ship_layout)
     observation_matrix_for_two_aliens = get_observation_matrix_for_two_aliens(ship_layout, bot_position, k,
                                                                               alien_sensed)
+    print(f'Time taken for getting observation matrix is {time.time()-start}')
     updated_belief_matrix_for_two_aliens = np.zeros((ship_dim, ship_dim, ship_dim, ship_dim), float)
     belief_matrix_for_two_aliens = belief_matrix_for_two_aliens * transition_prob
     for i1 in range(ship_dim):
