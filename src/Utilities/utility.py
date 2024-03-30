@@ -98,9 +98,10 @@ def calculate_information_gain(belief_matrix, ship_layout, alpha, num_crew=1, op
     # Calculate entropies for updated belief matrices
     entropy_is_beep[open_cell_mask] = np.array([calculate_entropy(bm) for bm in belief_matrix_updated_is_beep])
     entropy_no_beep[open_cell_mask] = np.array([calculate_entropy(bm) for bm in belief_matrix_updated_no_beep])
-    belief_matrix1 = marginalize_belief(belief_matrix,(2,3)) + marginalize_belief(belief_matrix,(0,1))
+    if num_crew ==2:
+        belief_matrix = marginalize_belief(belief_matrix,(2,3)) + marginalize_belief(belief_matrix,(0,1))
     # Vectorized computation of information gain
-    info_gain = original_entropy - (belief_matrix1 * entropy_is_beep + (1 - belief_matrix1) * entropy_no_beep)
+    info_gain = original_entropy - (belief_matrix * entropy_is_beep + (1 - belief_matrix) * entropy_no_beep)
     info_gain = info_gain * np.array(open_cell_mask).astype(np.integer)
     return info_gain
 
