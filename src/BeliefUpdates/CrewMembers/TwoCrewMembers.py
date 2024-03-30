@@ -1,13 +1,9 @@
-import math
-import time
-
 import numpy as np
 
-from src.Utilities.utility import get_num_of_open_cells_in_ship, get_manhattan_distance
 
 
 def initialize_belief_matrix_for_two_crew_members(ship_layout: list[list[str]]) -> np.ndarray:
-    n = get_num_of_open_cells_in_ship(ship_layout)
+    n = get_no_of_open_cells(ship_layout)
     ship_dim = len(ship_layout)
     belief_matrix_for_two_crew_members = np.zeros((ship_dim, ship_dim, ship_dim, ship_dim), float)
 
@@ -20,6 +16,10 @@ def initialize_belief_matrix_for_two_crew_members(ship_layout: list[list[str]]) 
                         # As two crew members can't be in the same cell
                         belief_matrix_for_two_crew_members[i1][j1][i2][j2] = 1 / ((n - 1) * (n - 2))
     return belief_matrix_for_two_crew_members
+
+
+def get_no_of_open_cells(ship_layout: list[list[str]]):
+    return sum(ship_layout[i][j] != 'C' for i in range(len(ship_layout)) for j in range(len(ship_layout[i])))
 
 
 def get_observation_matrix_for_two_crew_members(ship_layout, bot_position, alpha, is_beep):

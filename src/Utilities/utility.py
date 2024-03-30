@@ -2,6 +2,7 @@ import numpy as np
 from fpdf import FPDF
 
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
+from src.BeliefUpdates.CrewMembers.TwoCrewMembers import update_belief_matrix_for_two_crew_members
 
 
 def get_num_of_open_cells_in_ship(ship_layout: list[list[str]]):
@@ -67,7 +68,7 @@ def append_to_pdf(data):
     pdf.output('table.pdf')
 
 
-def calculate_information_gain(belief_matrix, ship_layout, alpha):
+def calculate_information_gain(belief_matrix, ship_layout, alpha, num_crew=1):
     ship_dim = len(ship_layout)
     original_entropy = calculate_entropy(belief_matrix)
 
@@ -78,11 +79,20 @@ def calculate_information_gain(belief_matrix, ship_layout, alpha):
     entropy_is_beep = np.full((ship_dim, ship_dim), original_entropy)
     entropy_no_beep = np.full((ship_dim, ship_dim), original_entropy)
 
+    belief_matrix_updated_is_beep = np.zeros((ship_dim, ship_dim), original_entropy)
+    belief_matrix_updated_no_beep = np.zeros((ship_dim, ship_dim), original_entropy)
+
     # Vectorized update of the belief matrix for all open cells
-    belief_matrix_updated_is_beep = np.array([update_belief_matrix_for_one_crew_member(
-        belief_matrix, ship_layout, (i, j), alpha, True) for i, j in zip(*np.where(open_cell_mask))])
-    belief_matrix_updated_no_beep = np.array([update_belief_matrix_for_one_crew_member(
-        belief_matrix, ship_layout, (i, j), alpha, False) for i, j in zip(*np.where(open_cell_mask))])
+    if num_crew == 1:
+        belief_matrix_updated_is_beep = np.array([update_belief_matrix_for_one_crew_member(
+            belief_matrix, ship_layout, (i, j), alpha, True) for i, j in zip(*np.where(open_cell_mask))])
+        belief_matrix_updated_no_beep = np.array([update_belief_matrix_for_one_crew_member(
+            belief_matrix, ship_layout, (i, j), alpha, False) for i, j in zip(*np.where(open_cell_mask))])
+    elif num_crew == 2:
+        belief_matrix_updated_is_beep = np.array([update_belief_matrix_for_two_crew_members(
+            belief_matrix, ship_layout, (i, j), alpha, True) for i, j in zip(*np.where(open_cell_mask))])
+        belief_matrix_updated_no_beep = np.array([update_belief_matrix_for_two_crew_members(
+            belief_matrix, ship_layout, (i, j), alpha, False) for i, j in zip(*np.where(open_cell_mask))])
 
     # Calculate entropies for updated belief matrices
     entropy_is_beep[open_cell_mask] = np.array([calculate_entropy(bm) for bm in belief_matrix_updated_is_beep])
@@ -100,5 +110,5 @@ def calculate_entropy(belief_matrix):
     return -np.sum(non_zero_beliefs * np.log(non_zero_beliefs))
 
 
-def marginalize_crew_belief(crew_member_belief, axis):
-    return crew_member_belief.sum(axis=axis)
+def marginalize_belief(belief, axis):
+    return belief.sum(axis=axis)

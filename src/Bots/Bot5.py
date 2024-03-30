@@ -1,13 +1,15 @@
+import time
+
 import numpy as np
 from collections import deque
 from src.BeliefUpdates.Aliens.OneAlien import update_belief_matrix_for_one_alien
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
 from src.Utilities.Status import Status
-from src.Utilities.utility import get_open_neighbors, calculate_information_gain
+from src.Utilities.utility import get_open_neighbors, calculate_information_gain, marginalize_belief
 
 
-class Bot2:
-    def __init__(self, bot_init_coords, alien_belief, crew_member_belief, alpha, k):
+class Bot5:
+    def __init__(self, bot_init_coords, alien_belief, crew_member_belief, alpha, k, number_of_crew_members: int = 2):
         self.position = bot_init_coords
         self.alien_belief = alien_belief
         self.crew_member_belief = crew_member_belief
@@ -16,6 +18,8 @@ class Bot2:
         self.utility_weights = {'risk': 0.2, 'information_gain': 0.01, 'success': 0.4}
         self.goal = (-1, -1)
         self.path = []
+        self.num_of_crew_members_saved = 0
+        self.number_of_crew_members = number_of_crew_members
 
     def update_beliefs(self, ship_layout, alien_beep, crew_member_beep):
         self.crew_member_belief = update_belief_matrix_for_one_crew_member(
@@ -25,8 +29,10 @@ class Bot2:
         return self.crew_member_belief, self.alien_belief
 
     def calculate_utility(self,ship_layout):
-        information_gain = calculate_information_gain(self.crew_member_belief, ship_layout, self.alpha)
-        utility = (self.utility_weights['success'] * self.crew_member_belief -
+        start = time.time()
+        information_gain = calculate_information_gain(self.crew_member_belief, ship_layout, self.alpha, 2)
+        print(f"Time for calculating info gain: {time.time() - start} ")
+        utility = (self.utility_weights['success'] * marginalize_belief(self.crew_member_belief, (2, 3)) -
                    self.utility_weights['risk'] * self.alien_belief +
                    self.utility_weights['information_gain'] * information_gain)
         return utility

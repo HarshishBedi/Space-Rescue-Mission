@@ -15,6 +15,7 @@ from src.Bots.Bot1 import Bot1
 from src.Bots.Bot2 import Bot2
 from src.Bots.Bot3 import Bot3
 from src.Bots.Bot4 import Bot4
+from src.Bots.Bot5 import Bot5
 from src.Bots.Bot6 import Bot6
 from src.Bots.Bot7 import Bot7
 from src.Utilities.Alien import alien_step
@@ -311,6 +312,9 @@ def get_bot_object(bot_init_coordinates: tuple[int, int], init_belief_matrix_for
                     k, number_of_crew_members)
     elif bot_type == 'BOT4':
         return Bot4(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
+                    k, number_of_crew_members)
+    elif bot_type == 'BOT5':
+        return Bot5(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
                     k, number_of_crew_members)
     elif bot_type == 'BOT6':
         return Bot6(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,

@@ -1,10 +1,9 @@
 from collections import deque
-from src.BeliefUpdates.Aliens.OneAlien import update_belief_matrix_for_one_alien
 from src.BeliefUpdates.Aliens.TwoAliens import update_belief_matrix_for_two_aliens, get_transition_prob
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
 from src.BeliefUpdates.CrewMembers.TwoCrewMembers import update_belief_matrix_for_two_crew_members
 from src.Utilities.Status import Status
-from src.Utilities.utility import get_open_neighbors, marginalize_crew_belief
+from src.Utilities.utility import get_open_neighbors, marginalize_belief
 
 
 class Bot7:
@@ -116,7 +115,7 @@ class Bot7:
                     ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                     self.position = next_position
                     return Status.SUCCESS, ship_layout, self.position, self.num_of_crew_members_saved
-                self.crew_member_belief = marginalize_crew_belief(self.crew_member_belief, (2, 3))
+                self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
