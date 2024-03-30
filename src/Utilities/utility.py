@@ -68,18 +68,29 @@ def append_to_pdf(data):
 
 
 def calculate_information_gain(belief_matrix, ship_layout, alpha):
-    # TODO: method needs to be optimized
-    ship_dim = len(belief_matrix)
+    start = time.time()
+    ship_dim = len(ship_layout)
     original_entropy = calculate_entropy(belief_matrix)
-    info_gain = np.zeros((ship_dim, ship_dim), float)
-    for i in range(ship_dim):
-        for j in range(ship_dim):
-            info_gain = original_entropy - (belief_matrix[i][j] * calculate_entropy(
-                update_belief_matrix_for_one_crew_member(belief_matrix, ship_layout,
-                                                         (i, j), alpha, True)) + (
-                                 1 - belief_matrix[i][j]) * calculate_entropy(
-                             update_belief_matrix_for_one_crew_member(belief_matrix, ship_layout,
-                                                                      (i, j), alpha, False)))
+
+    # Identify open cells
+    open_cell_mask = np.array(ship_layout) != 'C'
+
+    # Initialize the entropy arrays with the original entropy
+    entropy_is_beep = np.full((ship_dim, ship_dim), original_entropy)
+    entropy_no_beep = np.full((ship_dim, ship_dim), original_entropy)
+
+    # Vectorized update of the belief matrix for all open cells
+    belief_matrix_updated_is_beep = np.array([update_belief_matrix_for_one_crew_member(
+        belief_matrix, ship_layout, (i, j), alpha, True) for i, j in zip(*np.where(open_cell_mask))])
+    belief_matrix_updated_no_beep = np.array([update_belief_matrix_for_one_crew_member(
+        belief_matrix, ship_layout, (i, j), alpha, False) for i, j in zip(*np.where(open_cell_mask))])
+
+    # Calculate entropies for updated belief matrices
+    entropy_is_beep[open_cell_mask] = np.array([calculate_entropy(bm) for bm in belief_matrix_updated_is_beep])
+    entropy_no_beep[open_cell_mask] = np.array([calculate_entropy(bm) for bm in belief_matrix_updated_no_beep])
+
+    # Vectorized computation of information gain
+    info_gain = original_entropy - (belief_matrix * entropy_is_beep + (1 - belief_matrix) * entropy_no_beep)
     return info_gain
 
 
@@ -88,15 +99,6 @@ def calculate_entropy(belief_matrix):
     # Filter out zero probabilities to avoid log(0)
     non_zero_beliefs = belief_matrix[belief_matrix > 0]
     return -np.sum(non_zero_beliefs * np.log(non_zero_beliefs))
-
-
-def entropy(probability):
-    """
-    Calculate the entropy of a probability distribution.
-    """
-    if probability == 0 or probability == 1:
-        return 0
-    return -probability * np.log2(probability) - (1 - probability) * np.log2(1 - probability)
 
 
 def marginalize_crew_belief(crew_member_belief, axis):

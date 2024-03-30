@@ -13,7 +13,7 @@ class Bot2:
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
-        self.utility_weights = {'proximity': 0.4, 'risk': 0.2, 'information_gain': 0.2, 'success': 0.4}
+        self.utility_weights = {'risk': 0.2, 'information_gain': 0.01, 'success': 0.4}
         self.goal = (-1, -1)
         self.path = []
 
@@ -25,7 +25,7 @@ class Bot2:
         return self.crew_member_belief, self.alien_belief
 
     def calculate_utility(self,ship_layout):
-        information_gain = calculate_information_gain(self.crew_member_belief,ship_layout,self.alpha)
+        information_gain = calculate_information_gain(self.crew_member_belief, ship_layout, self.alpha)
         utility = (self.utility_weights['success'] * self.crew_member_belief -
                    self.utility_weights['risk'] * self.alien_belief +
                    self.utility_weights['information_gain'] * information_gain)
