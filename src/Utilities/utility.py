@@ -68,12 +68,13 @@ def append_to_pdf(data):
     pdf.output('table.pdf')
 
 
-def calculate_information_gain(belief_matrix, ship_layout, alpha, num_crew=1):
+def calculate_information_gain(belief_matrix, ship_layout, alpha, num_crew=1, open_cell_mask=None):
     ship_dim = len(ship_layout)
     original_entropy = calculate_entropy(belief_matrix)
 
     # Identify open cells
-    open_cell_mask = np.array(ship_layout) != 'C'
+    if open_cell_mask is None:
+        open_cell_mask = np.array(ship_layout) != 'C'
 
     # Initialize the entropy arrays with the original entropy
     entropy_is_beep = np.full((ship_dim, ship_dim), original_entropy)
@@ -97,9 +98,10 @@ def calculate_information_gain(belief_matrix, ship_layout, alpha, num_crew=1):
     # Calculate entropies for updated belief matrices
     entropy_is_beep[open_cell_mask] = np.array([calculate_entropy(bm) for bm in belief_matrix_updated_is_beep])
     entropy_no_beep[open_cell_mask] = np.array([calculate_entropy(bm) for bm in belief_matrix_updated_no_beep])
-
+    belief_matrix1 = marginalize_belief(belief_matrix,(2,3)) + marginalize_belief(belief_matrix,(0,1))
     # Vectorized computation of information gain
-    info_gain = original_entropy - (belief_matrix * entropy_is_beep + (1 - belief_matrix) * entropy_no_beep)
+    info_gain = original_entropy - (belief_matrix1 * entropy_is_beep + (1 - belief_matrix1) * entropy_no_beep)
+    info_gain = info_gain * np.array(open_cell_mask).astype(np.integer)
     return info_gain
 
 
@@ -112,3 +114,20 @@ def calculate_entropy(belief_matrix):
 
 def marginalize_belief(belief, axis):
     return belief.sum(axis=axis)
+
+
+def k_largest_index_argpartition(a, k):
+    idx = np.argpartition(-a.ravel(), k)[:k]
+    return np.column_stack(np.unravel_index(idx, a.shape))
+
+def get_mask_of_k_max(ship_dim,k_largest_coords):
+    mask = np.zeros((ship_dim,ship_dim),bool)
+    for i in range(len(k_largest_coords)):
+        x = k_largest_coords[i][0]
+        y = k_largest_coords[i][1]
+        x1 = k_largest_coords[i][2]
+        y1 = k_largest_coords[i][3]
+        mask[x][y] = True
+        mask[x1][y1] = True
+    return mask
+

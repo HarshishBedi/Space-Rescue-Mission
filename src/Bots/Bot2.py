@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from collections import deque
 from src.BeliefUpdates.Aliens.OneAlien import update_belief_matrix_for_one_alien
@@ -13,7 +15,7 @@ class Bot2:
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
-        self.utility_weights = {'risk': 0.2, 'information_gain': 0.01, 'success': 0.4}
+        self.utility_weights = {'risk': 0.1, 'information_gain': 0.005, 'success': 0.4}
         self.goal = (-1, -1)
         self.path = []
 

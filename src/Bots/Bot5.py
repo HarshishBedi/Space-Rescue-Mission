@@ -4,8 +4,10 @@ import numpy as np
 from collections import deque
 from src.BeliefUpdates.Aliens.OneAlien import update_belief_matrix_for_one_alien
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
+from src.BeliefUpdates.CrewMembers.TwoCrewMembers import update_belief_matrix_for_two_crew_members
 from src.Utilities.Status import Status
-from src.Utilities.utility import get_open_neighbors, calculate_information_gain, marginalize_belief
+from src.Utilities.utility import get_open_neighbors, calculate_information_gain, marginalize_belief, \
+    k_largest_index_argpartition, get_mask_of_k_max
 
 
 class Bot5:
@@ -15,39 +17,40 @@ class Bot5:
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
-        self.utility_weights = {'risk': 0.2, 'information_gain': 0.01, 'success': 0.4}
+        self.utility_weights = {'risk': 0.1, 'information_gain': 0.005, 'success': 0.4}
         self.goal = (-1, -1)
         self.path = []
         self.num_of_crew_members_saved = 0
         self.number_of_crew_members = number_of_crew_members
 
     def update_beliefs(self, ship_layout, alien_beep, crew_member_beep):
-        self.crew_member_belief = update_belief_matrix_for_one_crew_member(
-            self.crew_member_belief, ship_layout, self.position, self.alpha, crew_member_beep)
-        self.alien_belief = update_belief_matrix_for_one_alien(
-            self.alien_belief, ship_layout, self.position, self.k, alien_beep)
+        if self.num_of_crew_members_saved == 0:
+            self.crew_member_belief = update_belief_matrix_for_two_crew_members(self.crew_member_belief, ship_layout,
+                                                                                self.position, self.alpha,
+                                                                                crew_member_beep)
+        else:
+            self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
+                                                                               self.position, self.alpha,
+                                                                               crew_member_beep)
+        self.alien_belief = update_belief_matrix_for_one_alien(self.alien_belief, ship_layout, self.position,
+                                                               self.k, alien_beep)
         return self.crew_member_belief, self.alien_belief
 
     def calculate_utility(self,ship_layout):
-        start = time.time()
-        information_gain = calculate_information_gain(self.crew_member_belief, ship_layout, self.alpha, 2)
-        print(f"Time for calculating info gain: {time.time() - start} ")
-        utility = (self.utility_weights['success'] * marginalize_belief(self.crew_member_belief, (2, 3)) -
+        ship_dim = len(ship_layout)
+        k_max_crew_mate_belief_mask = get_mask_of_k_max(ship_dim,k_largest_index_argpartition(self.crew_member_belief,
+                                                                                              2))
+        information_gain = calculate_information_gain(self.crew_member_belief, ship_layout, self.alpha,
+                                                      self.number_of_crew_members-self.num_of_crew_members_saved,
+                                                      open_cell_mask=k_max_crew_mate_belief_mask)
+        utility = (self.utility_weights['success'] * (marginalize_belief(self.crew_member_belief, (2, 3)) +
+                                                      marginalize_belief(self.crew_member_belief,(0,1))) -
                    self.utility_weights['risk'] * self.alien_belief +
                    self.utility_weights['information_gain'] * information_gain)
         return utility
 
     def bot_step(self, ship_layout):
-        # neighbors = get_open_neighbors(self.position, ship_layout)
-        # best_neighbor = None
-        # max_utility = float('-inf')
-        # for neighbor in neighbors:
-        #     utility = self.calculate_utility(neighbor)
-        #     if utility > max_utility:
-        #         max_utility = utility
-        #         best_neighbor = neighbor
         path = self.calculate_path(ship_layout)
-
         if path:
             self.path = path
             next_position = path[0]
