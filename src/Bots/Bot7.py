@@ -1,5 +1,5 @@
 from collections import deque
-from src.BeliefUpdates.Aliens.TwoAliens import update_belief_matrix_for_two_aliens, get_transition_prob
+from src.BeliefUpdates.Aliens.TwoAliens import update_belief_matrix_for_two_aliens_vectorized, get_transition_prob
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
 from src.BeliefUpdates.CrewMembers.TwoCrewMembers import update_belief_matrix_for_two_crew_members
 from src.Utilities.Status import Status
@@ -43,9 +43,8 @@ class Bot7:
             self.crew_member_belief = update_belief_matrix_for_one_crew_member(self.crew_member_belief, ship_layout,
                                                                                self.position, self.alpha,
                                                                                crew_member_beep)
-        self.alien_belief = update_belief_matrix_for_two_aliens(self.alien_belief, ship_layout, self.position,
+        self.alien_belief = update_belief_matrix_for_two_aliens_vectorized(self.alien_belief, ship_layout, self.position,
                                                                 self.k, alien_beep,
-                                                                open_neighbor_cells=self.open_neighbor_cells,
                                                                 transition_prob=self.transition_prob)
         return self.crew_member_belief, self.alien_belief
 
