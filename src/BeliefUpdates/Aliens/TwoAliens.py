@@ -74,40 +74,7 @@ def get_transition_prob(open_neighbor_cells):
 def update_belief_matrix_for_two_aliens(belief_matrix_for_two_aliens: np.ndarray,
                                         ship_layout: list[list[str]],
                                         bot_position: tuple[int, int],
-                                        k: int, alien_sensed: bool, transition_prob,
-                                        open_neighbor_cells) -> np.ndarray:
-    start = time.time()
-    ship_dim = len(ship_layout)
-    observation_matrix_for_two_aliens = get_observation_matrix_for_two_aliens(ship_layout, bot_position, k,
-                                                                              alien_sensed)
-    print(f'Time taken for getting observation matrix is {time.time() - start}')
-    updated_belief_matrix_for_two_aliens = np.zeros((ship_dim, ship_dim, ship_dim, ship_dim), float)
-    belief_matrix_for_two_aliens = belief_matrix_for_two_aliens * transition_prob
-    for i1 in range(ship_dim):
-        for j1 in range(ship_dim):
-            for i2 in range(ship_dim):
-                for j2 in range(ship_dim):
-                    if ship_layout[i1][j1] != 'C' and ship_layout[i2][j2] != 'C':
-                        # Update belief based on the transition probabilities of neighboring cells
-                        for neighbor1 in open_neighbor_cells[i1][j1]:
-                            for neighbor2 in open_neighbor_cells[i2][j2]:
-                                # if neighbor1 != neighbor2:
-                                updated_belief_matrix_for_two_aliens[i1][j1][i2][j2] += (
-                                    belief_matrix_for_two_aliens[neighbor1[0]][neighbor1[1]][neighbor2[0]][
-                                        neighbor2[1]]) * observation_matrix_for_two_aliens[i1][j1][i2][j2]
-    # updated_belief_matrix_for_two_aliens = updated_belief_matrix_for_two_aliens * observation_matrix_for_two_aliens
-    # Normalize the updated belief matrix for two aliens
-    # total_probability = updated_belief_matrix_for_two_aliens.sum()
-    # updated_belief_matrix_for_two_aliens = updated_belief_matrix_for_two_aliens / total_probability
-    print(f"Time taken for updating belief: {time.time() - start}")
-    return updated_belief_matrix_for_two_aliens
-
-
-def update_belief_matrix_for_two_aliens_vectorized(belief_matrix_for_two_aliens: np.ndarray,
-                                                   ship_layout: list[list[str]],
-                                                   bot_position: tuple[int, int],
-                                                   k: int, alien_sensed: bool, transition_prob) -> np.ndarray:
-    start = time.time()
+                                        k: int, alien_sensed: bool, transition_prob) -> np.ndarray:
     ship_dim = len(ship_layout)
     observation_matrix_for_two_aliens = get_observation_matrix_for_two_aliens(ship_layout, bot_position, k,
                                                                               alien_sensed)
@@ -120,9 +87,8 @@ def update_belief_matrix_for_two_aliens_vectorized(belief_matrix_for_two_aliens:
             if ship_layout[i][j] == 'C':
                 updated_belief_matrix_for_two_aliens[i][j] = 0
     # Normalize the updated belief matrix for two aliens
-    # total_probability = updated_belief_matrix_for_two_aliens.sum()
-    # updated_belief_matrix_for_two_aliens = updated_belief_matrix_for_two_aliens / total_probability
-    print(f"Time taken for updating belief: {time.time() - start}")
+    total_probability = updated_belief_matrix_for_two_aliens.sum()
+    updated_belief_matrix_for_two_aliens = updated_belief_matrix_for_two_aliens / total_probability
     return updated_belief_matrix_for_two_aliens
 
 

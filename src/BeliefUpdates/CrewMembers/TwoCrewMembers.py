@@ -1,7 +1,6 @@
 import numpy as np
 
 
-
 def initialize_belief_matrix_for_two_crew_members(ship_layout: list[list[str]]) -> np.ndarray:
     n = get_no_of_open_cells(ship_layout)
     ship_dim = len(ship_layout)
