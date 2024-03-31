@@ -18,6 +18,7 @@ from src.Bots.Bot4 import Bot4
 from src.Bots.Bot5 import Bot5
 from src.Bots.Bot6 import Bot6
 from src.Bots.Bot7 import Bot7
+from src.Bots.Bot8 import Bot8
 from src.Utilities.Alien import alien_step
 from src.Utilities.Alien_Sensor import alien_sensor
 from src.Utilities.CreateTableClass import PDF
@@ -321,6 +322,9 @@ def get_bot_object(bot_init_coordinates: tuple[int, int], init_belief_matrix_for
                     k, number_of_crew_members)
     elif bot_type == 'BOT7':
         return Bot7(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
+                    k, number_of_crew_members, open_neighbor_cells=open_neighbor_cells)
+    elif bot_type == 'BOT8':
+        return Bot8(bot_init_coordinates, init_belief_matrix_for_one_alien, init_belief_matrix_for_one_crewmate, alpha,
                     k, number_of_crew_members, open_neighbor_cells=open_neighbor_cells)
 
 

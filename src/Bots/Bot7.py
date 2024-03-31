@@ -1,3 +1,4 @@
+import numpy as np
 from collections import deque
 from src.BeliefUpdates.Aliens.TwoAliens import update_belief_matrix_for_two_aliens, get_transition_prob
 from src.BeliefUpdates.CrewMembers.OneCrewMember import update_belief_matrix_for_one_crew_member
@@ -49,17 +50,11 @@ class Bot7:
         return self.crew_member_belief, self.alien_belief
 
     def get_max_belief_crew_member_position(self):
-        max_position = [-1, -1, -1, -1]
-        max_val = -1
-        dim = len(self.crew_member_belief)
-        for i in range(dim):
-            for j in range(dim):
-                for i1 in range(dim):
-                    for j1 in range(dim):
-                        if self.crew_member_belief[i][j][i1][j1] > max_val:
-                            max_val = self.crew_member_belief[i][j][i1][j1]
-                            max_position = [i, j, i1, j1]
-        return max_position[0], max_position[1]
+        if self.num_of_crew_members_saved == 0:
+            return np.unravel_index(np.argmax(np.array(self.crew_member_belief)),
+                                    np.array(self.crew_member_belief).shape)[:2]
+        elif self.num_of_crew_members_saved == 1:
+            return np.unravel_index(np.argmax(self.crew_member_belief), self.crew_member_belief.shape)
 
     def calculate_path(self, ship_layout):
         """
@@ -104,9 +99,7 @@ class Bot7:
         path = self.calculate_path(ship_layout)
         self.path = path
         if path:
-            print(f'Path:{path}')
             next_position = path[0]
-            print(f'next position:{next_position}')
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
                 self.num_of_crew_members_saved += 1
                 if self.num_of_crew_members_saved == self.number_of_crew_members:
@@ -130,12 +123,16 @@ class Bot7:
 
     def update_belief_based_on_bot_step(self, ship_layout):
         ship_dim = len(ship_layout)
+        self.alien_belief[self.position[0]][self.position[1]] = 0.0
         for i in range(ship_dim):
             for j in range(ship_dim):
-                self.crew_member_belief[i][j][self.position[0]][self.position[1]] = 0.0
                 self.alien_belief[i][j][self.position[0]][self.position[1]] = 0.0
-                self.crew_member_belief[self.position[0]][self.position[1]][i][j] = 0.0
                 self.alien_belief[self.position[0]][self.position[1]][i][j] = 0.0
+                if self.num_of_crew_members_saved == 0:
+                    self.crew_member_belief[i][j][self.position[0]][self.position[1]] = 0.0
+                    self.crew_member_belief[self.position[0]][self.position[1]][i][j] = 0.0
+        if self.num_of_crew_members_saved == 1:
+            self.crew_member_belief[self.position[0]][self.position[1]] = 0.0
 
     def is_cell_alien_safe(self, cell: tuple[int, int], ship_layout: list[list[str]]) -> bool:
         x, y = cell
