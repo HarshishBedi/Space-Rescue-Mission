@@ -52,7 +52,6 @@ class Bot5:
         if path:
             self.path = path
             next_position = path[0]
-            # print(f'Next step:{next_position}')
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
                 print('Crew Member found')
                 self.num_of_crew_members_saved += 1

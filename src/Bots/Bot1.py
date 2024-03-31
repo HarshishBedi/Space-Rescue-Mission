@@ -30,7 +30,6 @@ class Bot1:
     def calculate_path(self, ship_layout):
         goal_position = self.get_max_belief_crew_member_position()
         self.goal = goal_position
-        # print(f'Crew Member max belief position:{goal_position}')
         fringe = deque([(self.position, deque())])
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]  # Directions: Up, Down, Left, Right
         visited = {self.position}  # Keep track of visited positions to avoid loops
@@ -62,11 +61,8 @@ class Bot1:
     def bot_step(self, ship_layout):
         path = self.calculate_path(ship_layout)
         self.path = path
-        # print(f'Path calculated to goal node:{self.goal} is:{path}')
         if path:
-            # print(f'Path:{path}')
             next_position = path[0]
-            # print(f'Next step:{next_position}')
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'CM&B'

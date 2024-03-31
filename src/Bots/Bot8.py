@@ -61,12 +61,17 @@ class Bot8:
             self.path = path
             next_position = path[0]
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
-                ship_layout[self.position[0]][self.position[1]] = 'O'
-                ship_layout[next_position[0]][next_position[1]] = 'CM&B'
-                self.position = next_position
-                return Status.SUCCESS, ship_layout, self.position, 1
+                print('Crew Member found')
+                self.num_of_crew_members_saved += 1
+                if self.num_of_crew_members_saved == self.number_of_crew_members:
+                    ship_layout[self.position[0]][self.position[1]] = 'O'
+                    ship_layout[next_position[0]][next_position[1]] = 'CM&B'
+                    self.position = next_position
+                    return Status.SUCCESS, ship_layout, self.position, 1
+                self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
-                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
+                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A'
+                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'B&A'
                 self.position = next_position
@@ -87,7 +92,7 @@ class Bot8:
         visited = {self.position}  # Keep track of visited positions to avoid loops
         neighbors = get_open_neighbors(self.position, ship_layout)
         for neighbor in neighbors:
-            if self.is_cell_alien_safe(neighbor, ship_layout):
+            if self.is_cell_alien_safe(neighbor):
                 fringe.append((neighbor, deque([neighbor])))
                 visited.add(neighbor)
         if len(fringe) > 1:
@@ -123,11 +128,7 @@ class Bot8:
         if self.num_of_crew_members_saved == 1:
             self.crew_member_belief[self.position[0]][self.position[1]] = 0.0
 
-    def is_cell_alien_safe(self, cell: tuple[int, int], ship_layout: list[list[str]]) -> bool:
+    def is_cell_alien_safe(self, cell: tuple[int, int]) -> bool:
         x, y = cell
-        alien_chance_in_cell = 0.0
-        ship_dim = len(ship_layout)
-        for i in range(ship_dim):
-            for j in range(ship_dim):
-                alien_chance_in_cell += (self.alien_belief[i][j][x][y] + self.alien_belief[x][y][i][j])
+        alien_chance_in_cell = np.sum(self.alien_belief[:, :, x, y] + self.alien_belief[x, y, :, :])
         return alien_chance_in_cell == 0.0

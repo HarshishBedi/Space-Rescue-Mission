@@ -47,7 +47,6 @@ class Bot2:
         if path:
             self.path = path
             next_position = path[0]
-            # print(f'Next step:{next_position}')
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'CM&B'
