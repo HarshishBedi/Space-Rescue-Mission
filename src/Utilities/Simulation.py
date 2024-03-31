@@ -143,7 +143,8 @@ def simulate_for_bot_k_alpha(alien_positions, alpha, bot_init_coordinates, bot_t
         number_of_steps += 1
         if number_of_steps == 2000:
             status = Status.FAILURE
-    print(f'Completed simulation for {bot_type} with alpha:{alpha} and k:{k} in {time.time()-start_time}')
+    print(f'Completed simulation for {bot_type}({status}) after {number_of_steps} steps '
+          f'with alpha:{alpha} and k:{k} in {time.time()-start_time}')
     print('##################################################################')
     return num_crew_saved, number_of_steps, status, bot_type
 
