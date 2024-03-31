@@ -16,7 +16,7 @@ def main():
     alpha_range = [0.25]
     # args = parser.parse_args()
     # if args.command == 'bot8':
-    data_collection(ship_dim=35, number_of_aliens=1, number_of_crew_members=2, k_range=k_range,
+    data_collection(ship_dim=35, number_of_aliens=1, number_of_crew_members=1, k_range=k_range,
                     alpha_range=alpha_range,
                     sampling_index=10, sampling_index_per_layout=10,
                     bot_types=['BOT1','BOT2'],

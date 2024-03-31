@@ -54,10 +54,14 @@ class Bot5:
             next_position = path[0]
             # print(f'Next step:{next_position}')
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
-                ship_layout[self.position[0]][self.position[1]] = 'O'
-                ship_layout[next_position[0]][next_position[1]] = 'CM&B'
-                self.position = next_position
-                return Status.SUCCESS, ship_layout, self.position, 1
+                print('Crew Member found')
+                self.num_of_crew_members_saved += 1
+                if self.num_of_crew_members_saved == self.number_of_crew_members:
+                    ship_layout[self.position[0]][self.position[1]] = 'O'
+                    ship_layout[next_position[0]][next_position[1]] = 'CM&B'
+                    self.position = next_position
+                    return Status.SUCCESS, ship_layout, self.position, 1
+                self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'

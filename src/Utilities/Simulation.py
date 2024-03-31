@@ -208,6 +208,7 @@ def data_collection(ship_dim: int, number_of_aliens: int, number_of_crew_members
         avg_num_crew_saved[bot_type] = np.zeros((len(k_range), len(alpha_range)), float)
     for i in range(len(k_range)):
         for j in range(len(alpha_range)):
+            start_time_current = time.time()
             print(f'Running simulations with alpha:{alpha_range[j]} and k:{k_range[i]}')
             alpha = alpha_range[j]
             k = k_range[i]
@@ -219,6 +220,8 @@ def data_collection(ship_dim: int, number_of_aliens: int, number_of_crew_members
                                                          avg_num_steps_save_crew,
                                                          success_prob,
                                                          avg_num_crew_saved, i, j)
+            print(f'Completed simulation for all given bots with alpha{alpha} '
+                  f'and k:{k} in {time.time()-start_time_current}')
     print('Results')
     print(f'Krange:{k_range}')
     print(f'alpharange:{alpha_range}')
