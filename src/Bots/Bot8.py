@@ -44,15 +44,22 @@ class Bot8:
     def calculate_utility(self, ship_layout):
         ship_dim = len(ship_layout)
         k_max_crew_mate_belief_mask = get_mask_of_k_max(ship_dim, k_largest_index_argpartition(self.crew_member_belief,
-                                                                                               2))
+                                                                                               2),
+                                                        (self.number_of_crew_members - self.num_of_crew_members_saved))
         information_gain = calculate_information_gain(self.crew_member_belief, ship_layout, self.alpha,
                                                       self.number_of_crew_members - self.num_of_crew_members_saved,
                                                       open_cell_mask=k_max_crew_mate_belief_mask)
-        utility = (self.utility_weights['success'] * (marginalize_belief(self.crew_member_belief, (2, 3)) +
-                                                      marginalize_belief(self.crew_member_belief, (0, 1))) -
-                   self.utility_weights['risk'] * (marginalize_belief(self.alien_belief, (2, 3)) +
-                                                   marginalize_belief(self.alien_belief, (0, 1))) +
-                   self.utility_weights['information_gain'] * information_gain)
+        if self.num_of_crew_members_saved==0:
+            utility = (self.utility_weights['success'] * (marginalize_belief(self.crew_member_belief, (2, 3)) +
+                                                          marginalize_belief(self.crew_member_belief, (0, 1))) -
+                       self.utility_weights['risk'] * (marginalize_belief(self.alien_belief, (2, 3)) +
+                                                       marginalize_belief(self.alien_belief, (0, 1))) +
+                       self.utility_weights['information_gain'] * information_gain)
+        else:
+            utility = (self.utility_weights['success'] * self.crew_member_belief -
+                       self.utility_weights['risk'] * (marginalize_belief(self.alien_belief, (2, 3)) +
+                                                       marginalize_belief(self.alien_belief, (0, 1))) +
+                       self.utility_weights['information_gain'] * information_gain)
         return utility
 
     def bot_step(self, ship_layout):
