@@ -61,7 +61,6 @@ class Bot8:
             self.path = path
             next_position = path[0]
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
-                print('Crew Member found')
                 self.num_of_crew_members_saved += 1
                 if self.num_of_crew_members_saved == self.number_of_crew_members:
                     ship_layout[self.position[0]][self.position[1]] = 'O'

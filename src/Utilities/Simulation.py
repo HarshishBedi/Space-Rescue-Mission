@@ -119,6 +119,9 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
 
 def simulate_for_bot_k_alpha(alien_positions, alpha, bot_init_coordinates, bot_type, crew_member_positions, is_gen_pdf,
                              k, number_of_crew_members, open_neighbor_cells, ship_dim, ship_layout):
+    print('###############################################################')
+    print(f'Running simulation with {bot_type} for alpha:{alpha} and k:{k}')
+    start_time = time.time()
     num_crew_saved = 0
     (init_belief_matrix_for_one_crewmate,
      init_belief_matrix_for_one_alien) = init_belief(bot_type=bot_type, ship_layout=ship_layout,
@@ -129,65 +132,19 @@ def simulate_for_bot_k_alpha(alien_positions, alpha, bot_init_coordinates, bot_t
     crew_member_sensor = Crew_Member_Sensor(crew_member_positions, alpha)
     status = Status.INPROCESS
     number_of_steps = 0
-    pdf = PDF()
-    pdf.add_page()
-    pdf.set_font("Times", size=10)
-    if is_gen_pdf:
-        pdf.multi_cell(100, pdf.font_size * 2.5,
-                       'Number of open cells:' + str(get_num_of_open_cells_in_ship(ship_layout)),
-                       border=0, align='j', ln=3,
-                       max_line_height=pdf.font_size)
-        pdf.ln(pdf.font_size * 2.5)
-        pdf.create_table(table_data=ship_layout, title='Init Ship Layout' + str(number_of_steps),
-                         cell_width='even')
-        pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
-                         title='Init Crew Member Belief ' +
-                               str(number_of_steps),
-                         cell_width='even')
-        pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
-                         title='Init Alien belief ' + str(number_of_steps),
-                         cell_width='even')
     while status == Status.INPROCESS:
         alien_sensed = alien_sensor(bot.position, alien_positions, k, ship_dim=ship_dim)
         crew_member_beep = crew_member_sensor.crew_members_beep(bot.position)
         bot.update_beliefs(ship_layout, alien_sensed, crew_member_beep)
-        if is_gen_pdf:
-            pdf.add_page()
-            pdf.set_font("Times", size=10)
-            pdf.multi_cell(100, pdf.font_size * 2.5, 'Crew Member beep:' + str(crew_member_beep),
-                           border=0, align='j', ln=3, max_line_height=pdf.font_size)
-            pdf.ln(pdf.font_size * 2.5)
-            pdf.multi_cell(100, pdf.font_size * 2.5, 'Alien Sensed:' + str(alien_sensed), border=0,
-                           align='j',
-                           ln=3, max_line_height=pdf.font_size)
-            pdf.ln(pdf.font_size * 2.5)
         status, ship_layout, _, num_crew_saved = bot.bot_step(ship_layout)
         if status != Status.INPROCESS:
             break
         status, ship_layout, alien_positions = alien_step(ship_layout, alien_positions)
-        if is_gen_pdf:
-            pdf.multi_cell(100, pdf.font_size * 2.5,
-                           'Goal Postion:' + str(bot.goal[0]) + ',' + str(bot.goal[1]),
-                           border=0, align='j', ln=3,
-                           max_line_height=pdf.font_size)
-            pdf.ln(pdf.font_size * 2.5)
-            pdf.multi_cell(100, pdf.font_size * 2.5, 'Path to goal:' + str(bot.path),
-                           border=0, align='j', ln=3,
-                           max_line_height=pdf.font_size)
-            pdf.ln(pdf.font_size * 2.5)
-            pdf.create_table(table_data=ship_layout, title='Ship Layout at time ' + str(number_of_steps),
-                             cell_width='even')
-            pdf.create_table(table_data=convert_list_float_to_str(bot.crew_member_belief),
-                             title='Crew Member Belief  at time ' +
-                                   str(number_of_steps),
-                             cell_width='even')
-            pdf.create_table(table_data=convert_list_float_to_str(bot.alien_belief),
-                             title='Alien belief  at time ' + str(number_of_steps),
-                             cell_width='even')
         number_of_steps += 1
         if number_of_steps == 2000:
             status = Status.FAILURE
-    pdf.output('table_class.pdf')
+    print(f'Completed simulation for {bot_type} with alpha:{alpha} and k:{k} in {time.time()-start_time}')
+    print('##################################################################')
     return num_crew_saved, number_of_steps, status, bot_type
 
 
