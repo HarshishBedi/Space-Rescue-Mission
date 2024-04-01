@@ -50,11 +50,13 @@ class Bot7:
         return self.crew_member_belief, self.alien_belief
 
     def get_max_belief_crew_member_position(self):
+        max_indices = np.unravel_index(np.argmax(self.crew_member_belief), self.crew_member_belief.shape)
         if self.num_of_crew_members_saved == 0:
-            return np.unravel_index(np.argmax(np.array(self.crew_member_belief)),
-                                    np.array(self.crew_member_belief).shape)[:2]
-        elif self.num_of_crew_members_saved == 1:
-            return np.unravel_index(np.argmax(self.crew_member_belief), self.crew_member_belief.shape)
+            if np.sum(self.crew_member_belief, (2, 3))[max_indices[0]][max_indices[1]] > \
+                    np.sum(self.crew_member_belief, (0, 1))[max_indices[2]][max_indices[3]]:
+                return max_indices[0], max_indices[1]
+            return max_indices[2], max_indices[3]
+        return max_indices
 
     def calculate_path(self, ship_layout):
         """
