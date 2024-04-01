@@ -98,8 +98,8 @@ def calculate_information_gain(belief_matrix, ship_layout, alpha, num_crew=1, op
     # Calculate entropies for updated belief matrices
     entropy_is_beep[open_cell_mask] = np.array([calculate_entropy(bm) for bm in belief_matrix_updated_is_beep])
     entropy_no_beep[open_cell_mask] = np.array([calculate_entropy(bm) for bm in belief_matrix_updated_no_beep])
-    if num_crew ==2:
-        belief_matrix = marginalize_belief(belief_matrix,(2,3)) + marginalize_belief(belief_matrix,(0,1))
+    if num_crew == 2:
+        belief_matrix = marginalize_belief(belief_matrix, (2, 3)) + marginalize_belief(belief_matrix, (0, 1))
     # Vectorized computation of information gain
     info_gain = original_entropy - (belief_matrix * entropy_is_beep + (1 - belief_matrix) * entropy_no_beep)
     info_gain = info_gain * np.array(open_cell_mask).astype(np.integer)
@@ -121,14 +121,20 @@ def k_largest_index_argpartition(a, k):
     idx = np.argpartition(-a.ravel(), k)[:k]
     return np.column_stack(np.unravel_index(idx, a.shape))
 
-def get_mask_of_k_max(ship_dim,k_largest_coords):
-    mask = np.zeros((ship_dim,ship_dim),bool)
-    for i in range(len(k_largest_coords)):
-        x = k_largest_coords[i][0]
-        y = k_largest_coords[i][1]
-        x1 = k_largest_coords[i][2]
-        y1 = k_largest_coords[i][3]
-        mask[x][y] = True
-        mask[x1][y1] = True
-    return mask
 
+def get_mask_of_k_max(ship_dim, k_largest_coords, num_of_crew_left):
+    mask = np.zeros((ship_dim, ship_dim), bool)
+    if num_of_crew_left == 2:
+        for i in range(len(k_largest_coords)):
+            x = k_largest_coords[i][0]
+            y = k_largest_coords[i][1]
+            x1 = k_largest_coords[i][2]
+            y1 = k_largest_coords[i][3]
+            mask[x][y] = True
+            mask[x1][y1] = True
+    elif num_of_crew_left == 1:
+        for i in range(len(k_largest_coords)):
+            x = k_largest_coords[i][0]
+            y = k_largest_coords[i][1]
+            mask[x][y] = True
+    return mask

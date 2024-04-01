@@ -15,7 +15,7 @@ class Bot5:
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
-        self.utility_weights = {'risk': 0.1, 'information_gain': 0.005, 'success': 0.4}
+        self.utility_weights = {'risk': 0.2, 'information_gain': 0.05, 'success': 0.4}
         self.goal = (-1, -1)
         self.path = []
         self.num_of_crew_members_saved = 0
@@ -37,14 +37,20 @@ class Bot5:
     def calculate_utility(self, ship_layout):
         ship_dim = len(ship_layout)
         k_max_crew_mate_belief_mask = get_mask_of_k_max(ship_dim, k_largest_index_argpartition(self.crew_member_belief,
-                                                                                               2))
+                                                                                               4),
+                                                        (self.number_of_crew_members-self.num_of_crew_members_saved))
         information_gain = calculate_information_gain(self.crew_member_belief, ship_layout, self.alpha,
                                                       self.number_of_crew_members - self.num_of_crew_members_saved,
                                                       open_cell_mask=k_max_crew_mate_belief_mask)
-        utility = (self.utility_weights['success'] * (marginalize_belief(self.crew_member_belief, (2, 3)) +
-                                                      marginalize_belief(self.crew_member_belief, (0, 1))) -
-                   self.utility_weights['risk'] * self.alien_belief +
-                   self.utility_weights['information_gain'] * information_gain)
+        if self.num_of_crew_members_saved == 0:
+            utility = (self.utility_weights['success'] * (marginalize_belief(self.crew_member_belief, (2, 3)) +
+                                                          marginalize_belief(self.crew_member_belief, (0, 1))) -
+                       self.utility_weights['risk'] * self.alien_belief +
+                       self.utility_weights['information_gain'] * information_gain)
+        else:
+            utility = (self.utility_weights['success'] * self.crew_member_belief -
+                       self.utility_weights['risk'] * self.alien_belief +
+                       self.utility_weights['information_gain'] * information_gain)
         return utility
 
     def bot_step(self, ship_layout):
@@ -53,26 +59,25 @@ class Bot5:
             self.path = path
             next_position = path[0]
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
-                print('Crew Member found')
                 self.num_of_crew_members_saved += 1
                 if self.num_of_crew_members_saved == self.number_of_crew_members:
                     ship_layout[self.position[0]][self.position[1]] = 'O'
                     ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                     self.position = next_position
-                    return Status.SUCCESS, ship_layout, self.position, 1
+                    return Status.SUCCESS, ship_layout, self.position, self.num_of_crew_members_saved
                 self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'B&A'
                 self.position = next_position
-                return Status.FAILURE, ship_layout, self.position, 0
+                return Status.FAILURE, ship_layout, self.position, self.num_of_crew_members_saved
             ship_layout[self.position[0]][self.position[1]] = 'O'  # Clear the old position
             self.position = next_position
             ship_layout[self.position[0]][self.position[1]] = 'B'  # Mark the new position
             # Update the beliefs of alien and crew member positions:
             self.update_belief_based_on_bot_step(ship_layout)
-        return Status.INPROCESS, ship_layout, self.position, 0
+        return Status.INPROCESS, ship_layout, self.position, self.num_of_crew_members_saved
 
     def calculate_path(self, ship_layout):
         utility = self.calculate_utility(ship_layout)
