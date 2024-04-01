@@ -75,7 +75,7 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
     if avg_num_steps_save_crew is None or avg_num_crew_saved is None or success_prob is None:
         raise Exception("Dictionary for storing metrics is None")
     ship = Ship(ship_dim)
-    executor = ProcessPoolExecutor(40)
+    executor = ProcessPoolExecutor(60)
     futures = []
     for i in range(sampling_index):
         ship_layout, root_open_square = ship.generate_ship_layout()
@@ -145,6 +145,7 @@ def simulate_for_bot_k_alpha(alien_positions, alpha, bot_init_coordinates, bot_t
             status = Status.FAILURE
     print(f'Completed simulation for {bot_type}({status}) after {number_of_steps} steps '
           f'with alpha:{alpha} and k:{k} in {time.time()-start_time}')
+    print(f'Number of crew members saved:{num_crew_saved}')
     print('##################################################################')
     return num_crew_saved, number_of_steps, status, bot_type
 
@@ -193,8 +194,7 @@ def data_collection(ship_dim: int, number_of_aliens: int, number_of_crew_members
 def save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, k_range, success_prob, bot_types=None):
     if bot_types is None:
         bot_types = []
-    results_root_dir = ('C://Users//harsh//OneDrive//Desktop//Rutgers//Sem1//Intro to AI//Project '
-                        '2//Space-Rescue-Mission//Results')
+    results_root_dir = ('//Users//phaneendrach//PycharmProjects//Space-Rescue-Mission//Results')
 
     if os.path.exists(results_root_dir):
         shutil.rmtree(results_root_dir)
@@ -223,19 +223,19 @@ def save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, 
         os.mkdir(alpha_dir)
         avg_num_steps_save_crew_path = alpha_dir + '//metric-1.pdf'
         plot_metric(avg_num_steps_save_crew, k_range, 'Average Number of steps to save crew',
-                    'Alpha values',
+                    'k values',
                     'Average number of moves needed to rescue all crew members over range of k values '
                     'and alpha =' + str(alpha_range[i]), avg_num_steps_save_crew_path, index=i, is_alpha_range=False,
                     bot_types=bot_types)
         success_prob_path = alpha_dir + '//metric-2.pdf'
         plot_metric(success_prob, k_range, 'Success Probability of the bot',
-                    'Alpha values',
+                    'k values',
                     'Probability of successfully avoiding the alien and rescuing the crew over range of k values '
                     'and alpha =' + str(alpha_range[i]), success_prob_path, index=i, is_alpha_range=False,
                     bot_types=bot_types)
         avg_num_crew_saved_path = alpha_dir + '//metric-3.pdf'
         plot_metric(avg_num_crew_saved, k_range, 'Average number of crew members saved',
-                    'Alpha values',
+                    'k values',
                     'Average number of crew members saved over range of k values and alpha =' + str(alpha_range[i]),
                     avg_num_crew_saved_path, index=i, is_alpha_range=False, bot_types=bot_types)
 

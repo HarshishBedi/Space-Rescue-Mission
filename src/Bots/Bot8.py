@@ -18,7 +18,7 @@ class Bot8:
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
-        self.utility_weights = {'risk': 0.1, 'information_gain': 0.005, 'success': 0.4}
+        self.utility_weights = {'risk': 0.1, 'information_gain': 0.025, 'success': 0.4}
         self.goal = (-1, -1)
         self.path = []
         self.num_of_crew_members_saved = 0
@@ -73,7 +73,7 @@ class Bot8:
                     ship_layout[self.position[0]][self.position[1]] = 'O'
                     ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                     self.position = next_position
-                    return Status.SUCCESS, ship_layout, self.position, 1
+                    return Status.SUCCESS, ship_layout, self.position, self.num_of_crew_members_saved
                 self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'
@@ -81,13 +81,13 @@ class Bot8:
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'B&A'
                 self.position = next_position
-                return Status.FAILURE, ship_layout, self.position, 0
+                return Status.FAILURE, ship_layout, self.position, self.num_of_crew_members_saved
             ship_layout[self.position[0]][self.position[1]] = 'O'  # Clear the old position
             self.position = next_position
             ship_layout[self.position[0]][self.position[1]] = 'B'  # Mark the new position
             # Update the beliefs of alien and crew member positions:
             self.update_belief_based_on_bot_step(ship_layout)
-        return Status.INPROCESS, ship_layout, self.position, 0
+        return Status.INPROCESS, ship_layout, self.position, self.num_of_crew_members_saved
 
     def calculate_path(self, ship_layout):
         utility = self.calculate_utility(ship_layout)

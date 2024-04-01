@@ -37,7 +37,7 @@ class Bot5:
     def calculate_utility(self, ship_layout):
         ship_dim = len(ship_layout)
         k_max_crew_mate_belief_mask = get_mask_of_k_max(ship_dim, k_largest_index_argpartition(self.crew_member_belief,
-                                                                                               2),
+                                                                                               4),
                                                         (self.number_of_crew_members-self.num_of_crew_members_saved))
         information_gain = calculate_information_gain(self.crew_member_belief, ship_layout, self.alpha,
                                                       self.number_of_crew_members - self.num_of_crew_members_saved,
@@ -64,20 +64,20 @@ class Bot5:
                     ship_layout[self.position[0]][self.position[1]] = 'O'
                     ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                     self.position = next_position
-                    return Status.SUCCESS, ship_layout, self.position, 1
+                    return Status.SUCCESS, ship_layout, self.position, self.num_of_crew_members_saved
                 self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'B&A'
                 self.position = next_position
-                return Status.FAILURE, ship_layout, self.position, 0
+                return Status.FAILURE, ship_layout, self.position, self.num_of_crew_members_saved
             ship_layout[self.position[0]][self.position[1]] = 'O'  # Clear the old position
             self.position = next_position
             ship_layout[self.position[0]][self.position[1]] = 'B'  # Mark the new position
             # Update the beliefs of alien and crew member positions:
             self.update_belief_based_on_bot_step(ship_layout)
-        return Status.INPROCESS, ship_layout, self.position, 0
+        return Status.INPROCESS, ship_layout, self.position, self.num_of_crew_members_saved
 
     def calculate_path(self, ship_layout):
         utility = self.calculate_utility(ship_layout)
