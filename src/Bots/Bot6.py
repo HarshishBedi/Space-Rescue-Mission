@@ -96,7 +96,9 @@ class Bot6:
                     self.position = next_position
                     return Status.SUCCESS, ship_layout, self.position, self.num_of_crew_members_saved
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
-                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A'):
+                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A'
+                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A&A'
+                    or ship_layout[next_position[0]][next_position[1]] == 'A&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'B&A'
                 self.position = next_position

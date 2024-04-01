@@ -18,7 +18,7 @@ class Bot8:
         self.crew_member_belief = crew_member_belief
         self.alpha = alpha
         self.k = k
-        self.utility_weights = {'risk': 0.1, 'information_gain': 0.025, 'success': 0.4}
+        self.utility_weights = {'risk': 0.8, 'information_gain': 0.85, 'success': 2}
         self.goal = (-1, -1)
         self.path = []
         self.num_of_crew_members_saved = 0
@@ -49,7 +49,7 @@ class Bot8:
         information_gain = calculate_information_gain(self.crew_member_belief, ship_layout, self.alpha,
                                                       self.number_of_crew_members - self.num_of_crew_members_saved,
                                                       open_cell_mask=k_max_crew_mate_belief_mask)
-        if self.num_of_crew_members_saved==0:
+        if self.num_of_crew_members_saved == 0:
             utility = (self.utility_weights['success'] * (marginalize_belief(self.crew_member_belief, (2, 3)) +
                                                           marginalize_belief(self.crew_member_belief, (0, 1))) -
                        self.utility_weights['risk'] * (marginalize_belief(self.alien_belief, (2, 3)) +
@@ -77,7 +77,8 @@ class Bot8:
                 self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'
-                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A&A'):
+                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A&A'
+                    or ship_layout[next_position[0]][next_position[1]] == 'A&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'B&A'
                 self.position = next_position
@@ -102,6 +103,14 @@ class Bot8:
                 fringe.append((neighbor, deque([neighbor])))
                 visited.add(neighbor)
         if len(fringe) > 1:
+            fringe.popleft()
+        else:
+            min_alien_belief = float('inf')
+            min_alien_belief_cell = (-1,-1)
+            for neighbor in neighbors:
+                if np.sum(self.alien_belief[neighbor[0],neighbor[1],:,:]) < min_alien_belief:
+                    min_alien_belief_cell = neighbor
+            fringe.append((min_alien_belief_cell,deque([min_alien_belief_cell])))
             fringe.popleft()
         while fringe:
             current_position, path = fringe.popleft()

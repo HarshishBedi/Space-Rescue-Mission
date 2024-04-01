@@ -110,7 +110,8 @@ class Bot7:
                 self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'
-                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A&A'):
+                    or ship_layout[next_position[0]][next_position[1]] == 'CM&A&A'
+                    or ship_layout[next_position[0]][next_position[1]] == 'A&A'):
                 ship_layout[self.position[0]][self.position[1]] = 'O'
                 ship_layout[next_position[0]][next_position[1]] = 'B&A'
                 self.position = next_position
