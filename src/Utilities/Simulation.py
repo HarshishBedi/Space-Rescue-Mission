@@ -75,7 +75,7 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
     if avg_num_steps_save_crew is None or avg_num_crew_saved is None or success_prob is None:
         raise Exception("Dictionary for storing metrics is None")
     ship = Ship(ship_dim)
-    executor = ProcessPoolExecutor(60)
+    executor = ProcessPoolExecutor(10)
     futures = []
     for i in range(sampling_index):
         ship_layout, root_open_square = ship.generate_ship_layout()
@@ -194,7 +194,7 @@ def data_collection(ship_dim: int, number_of_aliens: int, number_of_crew_members
 def save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, k_range, success_prob, bot_types=None):
     if bot_types is None:
         bot_types = []
-    results_root_dir = ('//Users//phaneendrach//PycharmProjects//Space-Rescue-Mission//Results')
+    results_root_dir = ('C://Users//ASUS//OneDrive//Desktop//MS Rutgers//Spring 2024//Intro to AI//Projects//Space-Rescue-Mission//Results')
 
     if os.path.exists(results_root_dir):
         shutil.rmtree(results_root_dir)
@@ -299,9 +299,9 @@ def init_belief(bot_type: str, ship_layout, bot_init_coordinates, k):
     if bot_type == 'BOT1' or bot_type == 'BOT2' or bot_type == 'BOT3' or bot_type == 'BOT6':
         return (initialize_belief_matrix_for_one_crew_member(ship_layout),
                 initialize_belief_matrix_for_one_alien(ship_layout, bot_init_coordinates, k))
-    elif bot_type == 'BOT4' or bot_type == 'BOT5':
+    elif bot_type == 'BOT4' or bot_type == 'BOT5' or bot_type == 'BOT8':
         return (initialize_belief_matrix_for_two_crew_members(ship_layout),
                 initialize_belief_matrix_for_one_alien(ship_layout, bot_init_coordinates, k))
-    elif bot_type == 'BOT7' or bot_type == 'BOT8':
+    elif bot_type == 'BOT7':
         return (initialize_belief_matrix_for_two_crew_members(ship_layout),
                 initialize_belief_matrix_for_two_aliens(ship_layout, bot_init_coordinates, k))

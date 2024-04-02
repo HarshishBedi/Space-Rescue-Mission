@@ -127,7 +127,6 @@ class Bot7:
 
     def update_belief_based_on_bot_step(self, ship_layout):
         ship_dim = len(ship_layout)
-        self.alien_belief[self.position[0]][self.position[1]] = 0.0
         for i in range(ship_dim):
             for j in range(ship_dim):
                 self.alien_belief[i][j][self.position[0]][self.position[1]] = 0.0
