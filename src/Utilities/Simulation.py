@@ -194,7 +194,7 @@ def data_collection(ship_dim: int, number_of_aliens: int, number_of_crew_members
 def save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, k_range, success_prob, bot_types=None):
     if bot_types is None:
         bot_types = []
-    results_root_dir = ('C:/Users/harsh/OneDrive/Desktop/Rutgers/Sem1/Intro to AI/Project 2/Space-Rescue-Mission/Results')
+    results_root_dir = ('//common//home//sk2953//PycharmProjects//Space-Rescue-Mission//Results')
 
     if os.path.exists(results_root_dir):
         shutil.rmtree(results_root_dir)
