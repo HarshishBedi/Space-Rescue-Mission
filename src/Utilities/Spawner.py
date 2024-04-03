@@ -57,7 +57,12 @@ class Spawner(object):
             x, y = crew
             if self.ship_layout[x][y] == 'A':
                 self.ship_layout[x][y] = 'CM&A'
+            elif self.ship_layout[x][y] == 'A&A':
+                self.ship_layout[x][y] = 'CM&A&A'
+            elif self.ship_layout[x][y] == 'O':
+                self.ship_layout[x][y] = 'CM'
             else:
+                print('Some issue in the ship layout while spawning the crew member')
                 self.ship_layout[x][y] = 'CM'
         return self.ship_layout, random_open_squares_for_crew_members
 
