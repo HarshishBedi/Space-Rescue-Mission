@@ -15,10 +15,11 @@ def main():
     args = parser.parse_args()
     # edit the bots to include the bots you want to simulate and compare
     bots = ['BOT6', 'BOT7', 'BOT8']
+    # edit the number_of_aliens, number_of_crew_members values for different simulation
     if args.command == 'run_simulation':
         data_collection(ship_dim=35, number_of_aliens=2, number_of_crew_members=2, k_range=k_range,
                         alpha_range=alpha_range,
-                        sampling_index=100, sampling_index_per_layout=2,
+                        sampling_index=100, sampling_index_per_layout=5,
                         bot_types=bots,
                         is_show_tkinter=False, is_gen_pdf=False)
 
