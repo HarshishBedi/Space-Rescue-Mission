@@ -89,6 +89,7 @@ class Bot3:
             next_position = path[0]
             if ship_layout[next_position[0]][next_position[1]] == 'CM':
                 self.num_of_crew_members_saved += 1
+                # Resetting the crew belief matrix after finding one crew member
                 self.crew_member_belief = initialize_belief_matrix_for_one_crew_member(ship_layout)
                 if self.num_of_crew_members_saved == self.number_of_crew_members:
                     ship_layout[self.position[0]][self.position[1]] = 'O'

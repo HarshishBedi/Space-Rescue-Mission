@@ -4,6 +4,7 @@ import numpy as np
 def initialize_belief_matrix_for_one_crew_member(ship_layout: list[list[str]]) -> np.ndarray:
     open_cells = (np.array(ship_layout) != 'C') & (np.array(ship_layout) != 'B')
     n = open_cells.sum()
+    # Initialize belief for open cells
     belief_matrix = np.where(open_cells, 1 / n, 0)
     return belief_matrix
 
@@ -26,5 +27,6 @@ def update_belief_matrix_for_one_crew_member(belief_matrix: np.ndarray, ship_lay
     observation_matrix = get_observation_matrix_for_one_crew_member(ship_layout, bot_position, alpha, is_beep)
     updated_belief_matrix = belief_matrix * observation_matrix
     total_probability = updated_belief_matrix.sum()
+    # Normalizing the belief matrix
     updated_belief_matrix /= total_probability
     return updated_belief_matrix

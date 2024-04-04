@@ -28,7 +28,8 @@ def get_observation_matrix_for_two_crew_members(ship_layout, bot_position, alpha
     d2 = np.abs(i2 - bot_position[0]) + np.abs(j2 - bot_position[1])
     beep_prob_1 = np.exp(-alpha * (d1 - 1))
     beep_prob_2 = np.exp(-alpha * (d2 - 1))
-
+    # For beep heard case (if case), it can be from either of the two crew members
+    # For no beep heard case (else case), it should be from neither of the two crew members
     if is_beep:
         observation_matrix = beep_prob_1 + beep_prob_2 - beep_prob_1 * beep_prob_2
     else:
@@ -42,5 +43,6 @@ def update_belief_matrix_for_two_crew_members(belief_matrix: np.ndarray, ship_la
                                               is_beep: bool) -> np.ndarray:
     observation_matrix = get_observation_matrix_for_two_crew_members(ship_layout, bot_position, alpha, is_beep)
     updated_belief_matrix = belief_matrix * observation_matrix
+    # Normalizing the belief matrix
     updated_belief_matrix /= updated_belief_matrix.sum()
     return updated_belief_matrix

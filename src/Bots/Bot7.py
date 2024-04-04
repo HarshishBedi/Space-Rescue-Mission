@@ -109,6 +109,7 @@ class Bot7:
                     ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                     self.position = next_position
                     return Status.SUCCESS, ship_layout, self.position, self.num_of_crew_members_saved
+                # Marginalizing 4D belief matrix over the saved crew member to get a 2D belief matrix
                 self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'

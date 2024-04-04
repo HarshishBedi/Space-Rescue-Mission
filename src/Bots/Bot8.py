@@ -72,6 +72,7 @@ class Bot8:
                     ship_layout[next_position[0]][next_position[1]] = 'CM&B'
                     self.position = next_position
                     return Status.SUCCESS, ship_layout, self.position, self.num_of_crew_members_saved
+                # Marginalizing 4D belief matrix over the saved crew member to get a 2D belief matrix
                 self.crew_member_belief = marginalize_belief(self.crew_member_belief, (2, 3))
             if (ship_layout[next_position[0]][next_position[1]] == 'A'
                     or ship_layout[next_position[0]][next_position[1]] == 'CM&A'
@@ -131,7 +132,3 @@ class Bot8:
         elif self.num_of_crew_members_saved == 1:
             self.crew_member_belief[self.position[0]][self.position[1]] = 0.0
 
-    # def is_cell_alien_safe(self, cell: tuple[int, int]) -> bool:
-    #     x, y = cell
-    #     alien_chance_in_cell = np.sum(self.alien_belief[:, :, x, y] + self.alien_belief[x, y, :, :])
-    #     return alien_chance_in_cell == 0.0

@@ -34,14 +34,6 @@ class Bot2:
         return utility
 
     def bot_step(self, ship_layout):
-        # neighbors = get_open_neighbors(self.position, ship_layout)
-        # best_neighbor = None
-        # max_utility = float('-inf')
-        # for neighbor in neighbors:
-        #     utility = self.calculate_utility(neighbor)
-        #     if utility > max_utility:
-        #         max_utility = utility
-        #         best_neighbor = neighbor
         path = self.calculate_path(ship_layout)
 
         if path:
