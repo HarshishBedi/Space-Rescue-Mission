@@ -75,7 +75,7 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
     if avg_num_steps_save_crew is None or avg_num_crew_saved is None or success_prob is None:
         raise Exception("Dictionary for storing metrics is None")
     ship = Ship(ship_dim)
-    executor = ProcessPoolExecutor(10)
+    executor = ProcessPoolExecutor(50)
     futures = []
     for i in range(sampling_index):
         ship_layout, root_open_square = ship.generate_ship_layout()
@@ -123,11 +123,11 @@ def simulate_for_bot_k_alpha(alien_positions, alpha, bot_init_coordinates, bot_t
     print(f'Running simulation with {bot_type} for alpha:{alpha} and k:{k}')
     start_time = time.time()
     num_crew_saved = 0
-    (init_belief_matrix_for_one_crewmate,
-     init_belief_matrix_for_one_alien) = init_belief(bot_type=bot_type, ship_layout=ship_layout,
+    (init_belief_matrix_for_crewmates,
+     init_belief_matrix_for_aliens) = init_belief(bot_type=bot_type, ship_layout=ship_layout,
                                                      bot_init_coordinates=bot_init_coordinates, k=k)
-    bot = get_bot_object(bot_init_coordinates, init_belief_matrix_for_one_alien,
-                         init_belief_matrix_for_one_crewmate, alpha, k, number_of_crew_members, bot_type,
+    bot = get_bot_object(bot_init_coordinates, init_belief_matrix_for_aliens,
+                         init_belief_matrix_for_crewmates, alpha, k, number_of_crew_members, bot_type,
                          open_neighbor_cells)
     crew_member_sensor = Crew_Member_Sensor(crew_member_positions, alpha)
     status = Status.INPROCESS
@@ -194,7 +194,7 @@ def data_collection(ship_dim: int, number_of_aliens: int, number_of_crew_members
 def save_metric_plots(alpha_range, avg_num_crew_saved, avg_num_steps_save_crew, k_range, success_prob, bot_types=None):
     if bot_types is None:
         bot_types = []
-    results_root_dir = ('C://Users//ASUS//OneDrive//Desktop//MS Rutgers//Spring 2024//Intro to AI//Projects//Space-Rescue-Mission//Results')
+    results_root_dir = ('//common//home//sk2953//PycharmProjects//Space-Rescue-Mission//Results')
 
     if os.path.exists(results_root_dir):
         shutil.rmtree(results_root_dir)
