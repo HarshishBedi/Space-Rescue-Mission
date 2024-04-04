@@ -75,12 +75,11 @@ def run_simulation_for_n1_crew_members_n2_aliens(ship_dim: int, number_of_aliens
     if avg_num_steps_save_crew is None or avg_num_crew_saved is None or success_prob is None:
         raise Exception("Dictionary for storing metrics is None")
     ship = Ship(ship_dim)
-    executor = ProcessPoolExecutor(50)
+    executor = ProcessPoolExecutor(10)
     futures = []
     for i in range(sampling_index):
         ship_layout, root_open_square = ship.generate_ship_layout()
         open_neighbor_cells = open_neighbor_cells_matrix(ship_layout)
-        # print(f'Ship layout generated:{len(ship_layout)} and {len(ship_layout[0])}')
         spawner = Spawner(ship_layout, root_open_square)
         ship_layout, bot_init_coordinates = spawner.spawn_bot()
         ship_layout, alien_positions = spawner.spawn_aliens(number_of_aliens, bot_init_coordinates, k)
