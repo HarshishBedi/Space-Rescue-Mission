@@ -1,0 +1,3 @@
+fpdf
+fpdf2
+scipy 
