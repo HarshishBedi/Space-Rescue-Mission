@@ -1,8 +1,7 @@
 # Space-Rescue-Mission
 We are designing different bots which help the space roomba whose crew mates are in danger because of the threat of aliens. We compare the performance of different bots in different scenarios, with different approaches
-For running the simulation
-first install the three packages using pip or python interpreter: fpdf, fpdf2, and scipy
-then open terminal and navigate to the folder containing the Main.py file 
+For running the simulation, install the requirements.
+Then open terminal and navigate to the folder containing the Main.py file 
 run the command: python Main.py run_simulation
 
 
